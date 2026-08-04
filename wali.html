@@ -39,6 +39,7 @@
             .shadow-islami { box-shadow: 0 6px 24px rgba(6, 57, 42, 0.12), 0 2px 10px rgba(201, 162, 39, 0.10); border: 1px solid rgba(201, 162, 39, 0.18); }
             .teks-emas { background: linear-gradient(90deg, #E8C25C, #C9A227 45%, #F7E8A5 55%, #C9A227); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
         }
+        .tab-active { background: #0B6B4F; color: white; }
         body {
             color: #3F3A2E;
             background-color: #FBF7EE;
@@ -140,9 +141,23 @@
 
             <!-- Mutasi tabungan -->
             <div class="bg-white rounded-xl shadow-islami p-4">
-                <h3 class="font-bold mb-1"><i class="fas fa-history text-primary mr-2"></i>Mutasi Tabungan</h3>
-                <p class="text-xs text-stone-500 mb-3">Riwayat setoran, penarikan, dan belanja ananda.</p>
-                <div id="mutasiWali" class="space-y-2"></div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold"><i class="fas fa-history text-primary mr-2"></i>Mutasi Tabungan</h3>
+                        <p class="text-xs text-stone-500 mt-0.5">Semua transaksi ananda, diperbarui realtime.</p>
+                    </div>
+                    <span id="jumlahMutasi" class="text-[11px] bg-pasir text-stone-500 px-2 py-1 rounded-full shrink-0"></span>
+                </div>
+                <div class="flex gap-1 mt-3 bg-pasir/70 rounded-lg p-1 text-xs" id="filterMutasi">
+                    <button data-f="semua" class="filterMutasiBtn flex-1 py-1.5 rounded-md font-semibold text-stone-500 hover:bg-white/70">Semua</button>
+                    <button data-f="setor" class="filterMutasiBtn flex-1 py-1.5 rounded-md font-semibold text-stone-500 hover:bg-white/70">Setoran</button>
+                    <button data-f="tarik" class="filterMutasiBtn flex-1 py-1.5 rounded-md font-semibold text-stone-500 hover:bg-white/70">Penarikan</button>
+                    <button data-f="potong_belanja" class="filterMutasiBtn flex-1 py-1.5 rounded-md font-semibold text-stone-500 hover:bg-white/70">Belanja</button>
+                </div>
+                <div id="mutasiWali" class="space-y-2 mt-3"></div>
+                <button id="btnMuatLagi" class="hidden w-full mt-3 text-sm font-semibold text-primary bg-pasir/70 rounded-lg py-2 hover:bg-pasir transition">
+                    <i class="fas fa-chevron-down mr-1"></i> Muat Lebih Banyak
+                </button>
             </div>
         </div>
 
@@ -275,23 +290,38 @@
         $('namaSantri').textContent = s.nama;
         $('infoSantri').textContent = `NIS ${s.nis} | Kelas ${s.kelas || '-'}`;
         $('saldoSantri').textContent = formatRp(s.saldo);
+        batasMutasi = 20;
+        filterMutasi = 'semua';
+        document.querySelectorAll('.filterMutasiBtn').forEach(x => x.classList.remove('tab-active'));
+        document.querySelector('.filterMutasiBtn[data-f="semua"]').classList.add('tab-active');
         renderMutasi();
     }
 
-    // ======================== MUTASI ========================
+    // ======================== MUTASI LENGKAP ========================
+    let filterMutasi = 'semua';
+    let batasMutasi = 20;
+
+    function daftarMutasi() {
+        const list = (riwayatTabungan || []).filter(r => r.santriId === santriAktif.id);
+        if (filterMutasi !== 'semua') return list.filter(r => r.jenis === filterMutasi);
+        return list;
+    }
     function renderMutasi() {
         const cont = $('mutasiWali');
         cont.innerHTML = '';
-        const list = riwayatTabungan.filter(r => r.santriId === santriAktif.id).reverse().slice(0, 30);
-        if (list.length === 0) {
-            cont.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">Belum ada mutasi.</p>';
+        const semua = daftarMutasi().slice().reverse();
+        const tampil = semua.slice(0, batasMutasi);
+        $('jumlahMutasi').textContent = semua.length > 0 ? 'Total ' + semua.length + ' transaksi' : '';
+        if (tampil.length === 0) {
+            cont.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">Belum ada transaksi.</p>';
+            $('btnMuatLagi').classList.add('hidden');
             return;
         }
-        list.forEach(r => {
+        tampil.forEach(r => {
             const div = document.createElement('div');
             const isSetor = r.jenis === 'setor';
             const isTarik = r.jenis === 'tarik';
-            const label = isSetor ? 'Setor' : isTarik ? 'Tarik' : 'Belanja';
+            const label = isSetor ? 'Setoran' : isTarik ? 'Penarikan' : 'Belanja';
             const badge = isSetor
                 ? 'bg-green-100 text-green-700'
                 : isTarik ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
@@ -316,7 +346,23 @@
             `;
             cont.appendChild(div);
         });
+        $('btnMuatLagi').classList.toggle('hidden', semua.length <= batasMutasi);
     }
+
+    $('btnMuatLagi').addEventListener('click', () => {
+        batasMutasi += 20;
+        renderMutasi();
+    });
+
+    $('filterMutasi').addEventListener('click', e => {
+        const b = e.target.closest('.filterMutasiBtn');
+        if (!b) return;
+        filterMutasi = b.dataset.f;
+        batasMutasi = 20;
+        document.querySelectorAll('.filterMutasiBtn').forEach(x => x.classList.remove('tab-active'));
+        b.classList.add('tab-active');
+        renderMutasi();
+    });
 
     // ======================== HUBUNGI KOPERASI ========================
     $('btnHubungiKoperasi').addEventListener('click', () => {

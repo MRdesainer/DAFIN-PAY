@@ -1693,10 +1693,11 @@
             const santri = santriList.find(s => s.id === santriId);
             if (santri.saldo < total) { showToast('Saldo tabungan tidak cukup!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
             santri.saldo -= total;
+            const rinciBelanja = keranjang.map(k => k.jumlah + 'x ' + k.nama).join(', ');
             riwayatTabungan.push({
                 id: Date.now(), santriId: santri.id, santriNama: santri.nama,
                 jenis: 'potong_belanja', jumlah: total, saldo: santri.saldo,
-                keterangan: 'Belanja di kasir', tanggal: tglFull(), terkirim: false,
+                keterangan: 'Belanja di kasir: ' + rinciBelanja, tanggal: tglFull(), terkirim: false,
                 tanggalKey: toDateKey(new Date())
             });
         }
