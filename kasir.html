@@ -12,7 +12,7 @@
     <script src="config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest-kasir.json">
     <meta name="theme-color" content="#0B6B4F">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -62,6 +62,18 @@
     </style>
 </head>
 <body class="min-h-screen">
+
+    <!-- Kunci masuk aplikasi kasir -->
+    <div id="lockApp" class="fixed inset-0 z-[70] flex items-center justify-center p-4" style="background-image: linear-gradient(160deg,#FBF7EE 0%,#F6ECD7 55%,#F0E0C3 100%);">
+        <div class="w-full max-w-sm text-center">
+            <img src="icons/icon-192.png" alt="Logo" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-islami object-cover">
+            <h1 class="text-2xl font-extrabold teks-emas">Aplikasi Kasir</h1>
+            <p class="text-sm text-stone-500 mt-1 mb-4">Masukkan password admin untuk masuk.</p>
+            <input id="lockPassword" type="password" placeholder="Password admin" class="w-full border rounded-lg py-2 px-3 text-sm text-center focus:ring-2 focus:ring-primary focus:border-primary">
+            <p id="lockPesan" class="text-xs text-red-500 mt-2 hidden"></p>
+            <button id="btnLockMasuk" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold mt-3 ring-1 ring-secondary/40">Masuk</button>
+        </div>
+    </div>
 
     <!-- Overlay sinkronisasi online -->
     <div id="splashOnline" class="fixed inset-0 z-[60] hidden items-center justify-center bg-white/95 backdrop-blur">
@@ -3288,6 +3300,32 @@
 
     // ======================== START ONLINE SYNC ========================
     initOnline();
+
+    // ======================== KUNCI MASUK APLIKASI ========================
+    function bukaLock() {
+        document.getElementById('lockApp').classList.add('hidden');
+    }
+    function verifLock() {
+        const p = document.getElementById('lockPassword').value;
+        if (p === adminPassword) {
+            try { localStorage.setItem('barokah_lock', JSON.stringify(Date.now())); } catch {}
+            bukaLock();
+            document.getElementById('lockPassword').value = '';
+        } else {
+            const el = document.getElementById('lockPesan');
+            el.textContent = 'Password salah!';
+            el.classList.remove('hidden');
+        }
+    }
+    document.getElementById('btnLockMasuk').addEventListener('click', verifLock);
+    document.getElementById('lockPassword').addEventListener('keydown', e => { if (e.key === 'Enter') verifLock(); });
+    (function() {
+        try {
+            const t = JSON.parse(localStorage.getItem('barokah_lock'));
+            if (t && (Date.now() - t) < 7 * 24 * 3600 * 1000) { bukaLock(); return; }
+        } catch {}
+        setTimeout(() => document.getElementById('lockPassword').focus(), 100);
+    })();
 
     // Daftarkan service worker (agar bisa dipasang sebagai aplikasi Android/PWA)
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
