@@ -43,9 +43,9 @@
 <body class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-sm">
         <div class="text-center mb-6">
-            <img src="icons/icon-192.png" alt="Logo" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-islami">
-            <h1 class="text-2xl font-extrabold teks-emas">KASIR BAROKAH</h1>
-            <p class="text-sm text-stone-500 mt-1">Koperasi Santri - Kasir, Tabungan & Pembayaran Wali</p>
+            <img id="logoLanding" src="icons/icon-192.png" alt="Logo" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-islami object-cover">
+            <h1 id="judulLanding" class="text-2xl font-extrabold teks-emas">KASIR BAROKAH</h1>
+            <p id="subLanding" class="text-sm text-stone-500 mt-1">Koperasi Santri - Kasir, Tabungan & Pembayaran Wali</p>
         </div>
 
         <div class="space-y-3">
@@ -103,6 +103,15 @@
             const app = firebase.initializeApp(cfg);
             firebase.database(app).ref('barokah/admin_pass').on('value', snap => {
                 if (snap.val()) kasirPass = String(snap.val());
+            }, () => {});
+            firebase.database(app).ref('barokah/identitas').on('value', snap => {
+                const idn = snap.val() || {};
+                if (idn.namaApp) {
+                    document.title = idn.namaApp + ' - Kasir & Tabungan';
+                    $id('judulLanding').textContent = String(idn.namaApp).toUpperCase();
+                }
+                if (idn.alamat) $id('subLanding').textContent = idn.alamat + ' - Kasir, Tabungan & Pembayaran Wali';
+                if (idn.logo) $id('logoLanding').src = idn.logo;
             }, () => {});
         } catch (e) {}
     }
