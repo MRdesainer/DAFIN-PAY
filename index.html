@@ -11,6 +11,8 @@
     <link rel="icon" href="icons/icon-192.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -47,7 +49,7 @@
         </div>
 
         <div class="space-y-3">
-            <a href="kasir.html" class="block bg-gradient-to-r from-primary to-gelad p-4 rounded-xl shadow-islami hover:opacity-90 transition" style="background:linear-gradient(90deg,#0B6B4F,#06392A);">
+            <button id="btnKasir" class="block w-full text-left bg-gradient-to-r from-primary to-gelad p-4 rounded-xl shadow-islami hover:opacity-90 transition" style="background:linear-gradient(90deg,#0B6B4F,#06392A);">
                 <div class="flex items-center gap-3 text-white">
                     <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
                         <i class="fas fa-cash-register text-2xl text-secondary"></i>
@@ -57,7 +59,7 @@
                         <p class="text-xs opacity-80">Untuk penjaga koperasi & admin</p>
                     </div>
                 </div>
-            </a>
+            </button>
 
             <a href="wali.html" class="block bg-white p-4 rounded-xl shadow-islami hover:border-emas transition">
                 <div class="flex items-center gap-3">
@@ -77,8 +79,57 @@
         </p>
     </div>
 
+    <div id="modalKasir" class="hidden fixed inset-0 z-50 bg-black/50 items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-xl shadow-islami p-5">
+            <h2 class="font-bold text-primary text-lg"><i class="fas fa-lock mr-2"></i>Masuk Aplikasi Kasir</h2>
+            <p class="text-xs text-stone-500 mt-1">Aplikasi kasir dilindungi password. Masukkan password admin untuk lanjut.</p>
+            <input id="pinKasir" type="password" placeholder="Password admin" class="w-full border rounded-lg py-2 px-3 text-sm mt-3 focus:ring-2 focus:ring-primary focus:border-primary">
+            <p id="pesanPinKasir" class="text-xs text-red-500 mt-2 hidden"></p>
+            <div class="flex gap-2 mt-4">
+                <button id="btnBatalKasir" class="flex-1 bg-stone-200 text-stone-600 py-2 rounded-lg font-semibold hover:bg-stone-300 transition">Batal</button>
+                <button id="btnMasukKasir" class="flex-1 bg-gradient-to-r from-primary to-gelap text-white py-2 rounded-lg font-semibold hover:opacity-90 transition">Masuk</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+    </script>
+    <script>
+    let kasirPass = 'admin123';
+    const cfg = window.FIREBASE_CONFIG || {};
+    if (cfg.apiKey && cfg.apiKey.indexOf('PASTE') === -1) {
+        try {
+            const app = firebase.initializeApp(cfg);
+            firebase.database(app).ref('barokah/admin_pass').on('value', snap => {
+                if (snap.val()) kasirPass = String(snap.val());
+            }, () => {});
+        } catch (e) {}
+    }
+    const $id = id => document.getElementById(id);
+    function bukaKasir() {
+        $id('modalKasir').classList.remove('hidden');
+        $id('modalKasir').classList.add('flex');
+        $id('pesanPinKasir').classList.add('hidden');
+        setTimeout(() => $id('pinKasir').focus(), 50);
+    }
+    function tutupKasir() {
+        $id('modalKasir').classList.add('hidden');
+        $id('modalKasir').classList.remove('flex');
+        $id('pinKasir').value = '';
+    }
+    function cekKasir() {
+        if ($id('pinKasir').value === kasirPass) {
+            location.href = 'kasir.html';
+        } else {
+            $id('pesanPinKasir').textContent = 'Password salah!';
+            $id('pesanPinKasir').classList.remove('hidden');
+        }
+    }
+    $id('btnKasir').addEventListener('click', bukaKasir);
+    $id('btnBatalKasir').addEventListener('click', tutupKasir);
+    $id('btnMasukKasir').addEventListener('click', cekKasir);
+    $id('pinKasir').addEventListener('keydown', e => { if (e.key === 'Enter') cekKasir(); });
     </script>
 </body>
 </html>
