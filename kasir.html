@@ -2144,7 +2144,7 @@
             const jmlClass = r.jenis === 'setor' ? 'text-green-600' : 'text-red-600';
             const jmlPrefix = r.jenis === 'setor' ? '+' : '-';
             const statusKirim = r.jenis === 'potong_belanja'
-                ? (r.terkirim ? '<span class="text-green-600 text-xs"><i class="fas fa-check-double"></i> Terkirim</span>' : '<span class="text-yellow-600 text-xs"><i class="fas fa-clock"></i> Pending</span>')
+                ? (r.terkirim ? '<span class="text-green-600 text-xs"><i class="fas fa-check-double"></i> Laporan WA terkirim</span>' : '<span class="text-yellow-600 text-xs"><i class="fas fa-clock"></i> Laporan WA belum dikirim</span>')
                 : '-';
             tr.innerHTML = `
                 <td class="p-2 text-xs">${r.tanggal}</td>
