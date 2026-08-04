@@ -1142,6 +1142,14 @@
         }
     };
 
+    // Log transaksi aman (append-only): tidak bisa tertimpa antar perangkat.
+    function tulisTransaksi(rec) {
+        if (!rec || !window.__fbReady) return;
+        try {
+            firebase.database().ref('barokah/transaksi').push(rec).catch(() => {});
+        } catch (e) {}
+    }
+
     // Default data
     let produkList = DB.get('produk', [
         { id: 1, kode: '8991234567001', nama: 'Air Mineral 600ml', harga: 3500, stok: 50, halal: true, emoji: '💧' },
@@ -1694,12 +1702,14 @@
             if (santri.saldo < total) { showToast('Saldo tabungan tidak cukup!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
             santri.saldo -= total;
             const rinciBelanja = keranjang.map(k => k.jumlah + 'x ' + k.nama).join(', ');
-            riwayatTabungan.push({
+            const recBelanja = {
                 id: Date.now(), santriId: santri.id, santriNama: santri.nama,
                 jenis: 'potong_belanja', jumlah: total, saldo: santri.saldo,
                 keterangan: 'Belanja di kasir: ' + rinciBelanja, tanggal: tglFull(), terkirim: false,
                 tanggalKey: toDateKey(new Date())
-            });
+            };
+            riwayatTabungan.push(recBelanja);
+            tulisTransaksi(recBelanja);
         }
 
         // Kurangi stok
@@ -1984,12 +1994,14 @@
             santri.saldo -= jumlah;
         }
 
-        riwayatTabungan.push({
+        const recTb = {
             id: Date.now(), santriId: santri.id, santriNama: santri.nama,
             jenis: jenisTransaksiAktif, jumlah: jumlah, saldo: santri.saldo,
             keterangan: keterangan, tanggal: tglFull(), terkirim: false,
             tanggalKey: toDateKey(new Date())
-        });
+        };
+        riwayatTabungan.push(recTb);
+        tulisTransaksi(recTb);
 
         saveAll();
         document.getElementById('jumlahTabungan').value = '';
@@ -2766,12 +2778,14 @@
             tanggalKey: toDateKey(d),
             status: 'dikonfirmasi', sumber: 'kasir'
         });
-        riwayatTabungan.push({
+        const recTopup = {
             id: Date.now() + 1, santriId: santri.id, santriNama: santri.nama,
             jenis: 'setor', jumlah: jumlah, saldo: santri.saldo,
             keterangan: 'Top-up via pembayaran wali' + (keterangan ? ' - ' + keterangan : ''),
             tanggal: tglFull(), terkirim: false, tanggalKey: toDateKey(d)
-        });
+        };
+        riwayatTabungan.push(recTopup);
+        tulisTransaksi(recTopup);
         saveAll();
         document.getElementById('pembayaranJumlah').value = '';
         document.getElementById('pembayaranReferensi').value = '';
@@ -2792,12 +2806,14 @@
             s.saldo += p.jumlah;
             p.status = 'dikonfirmasi';
             p.dikonfirmasiPada = tglFull();
-            riwayatTabungan.push({
+            const recKonfirmasi = {
                 id: Date.now(), santriId: s.id, santriNama: s.nama,
                 jenis: 'setor', jumlah: p.jumlah, saldo: s.saldo,
                 keterangan: 'Top-up transfer wali - ' + formatMetode(p.metode),
                 tanggal: tglFull(), terkirim: false, tanggalKey: p.tanggalKey || toDateKey(new Date())
-            });
+            };
+            riwayatTabungan.push(recKonfirmasi);
+            tulisTransaksi(recKonfirmasi);
             saveAll();
             renderPembayaranWali();
             if (typeof refreshDaftarSantri === 'function') refreshDaftarSantri();

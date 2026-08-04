@@ -173,6 +173,7 @@
     let santriList = [];
     let identitas = {};
     let riwayatTabungan = [];
+    let logTransaksi = [];
     let santriAktif = null;
     let dataReady = false;
 
@@ -201,6 +202,7 @@
             santriList = data.santri || [];
             identitas = data.identitas || {};
             riwayatTabungan = data.riwayat_tabungan || [];
+            logTransaksi = data.transaksi ? Object.values(data.transaksi) : [];
             dataReady = true;
             $('judulWali').textContent = (identitas.namaApp || 'KOPERASI') + ' - APLIKASI WALI';
             $('namaAppWali').textContent = (identitas.namaApp || 'Koperasi Santri') + ' | ' + (identitas.alamat || '');
@@ -305,7 +307,9 @@
     function daftarMutasi() {
         const raw = riwayatTabungan || [];
         const arr = Array.isArray(raw) ? raw : Object.values(raw);
-        return arr.filter(r => {
+        const log = (logTransaksi || []).filter(t => t && !arr.some(r => r && r.id === t.id));
+        const gabungan = arr.concat(log);
+        return gabungan.filter(r => {
             if (!r) return false;
             const sid = (r.santriId !== undefined && r.santriId !== null) ? Number(r.santriId) : Number(r.id);
             if (sid === Number(santriAktif.id)) return true;
