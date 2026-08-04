@@ -1144,9 +1144,32 @@
 
     // Log transaksi aman (append-only): tidak bisa tertimpa antar perangkat.
     function tulisTransaksi(rec) {
-        if (!rec || !window.__fbReady) return;
+        if (!rec || !window.__fbReady) return null;
         try {
-            firebase.database().ref('barokah/transaksi').push(rec).catch(() => {});
+            return firebase.database().ref('barokah/transaksi').push(rec);
+        } catch (e) { return null; }
+    }
+
+    // Update saldo secara atomik per-santri: server menghitung saldo baru dari
+    // nilai terkini, sehingga tidak bisa ditimpa data lama dari perangkat lain.
+    function updateSaldoServer(santri, delta, refRec) {
+        if (!santri || !window.__fbReady) return;
+        const idx = santriList.findIndex(s => s.id === santri.id);
+        if (idx === -1) return;
+        try {
+            const ref = firebase.database().ref('barokah/santri/' + idx + '/saldo');
+            ref.transaction(cur => {
+                const base = (typeof cur === 'number' && !isNaN(cur)) ? cur : 0;
+                return base + delta;
+            }).then(res => {
+                const nuevo = res && res.snapshot && res.snapshot.val();
+                if (typeof nuevo === 'number' && !isNaN(nuevo)) {
+                    santri.saldo = nuevo;
+                    __cache['santri'] = santriList;
+                    try { localStorage.setItem('barokah_santri', JSON.stringify(santriList)); } catch {}
+                    if (refRec) refRec.update({ saldo: nuevo }).catch(() => {});
+                }
+            }).catch(() => {});
         } catch (e) {}
     }
 
@@ -1173,10 +1196,10 @@
     let riwayatTabungan = DB.get('riwayat_tabungan', []);
     let riwayatPenjualan = DB.get('riwayat_penjualan', []);
     let pembayaranWali = DB.get('pembayaran_wali', []);
+    let logTransaksiKasir = [];
 
     function saveAll() {
         DB.set('produk', produkList);
-        DB.set('santri', santriList);
         DB.set('riwayat_tabungan', riwayatTabungan);
         DB.set('riwayat_penjualan', riwayatPenjualan);
         DB.set('pembayaran_wali', pembayaranWali);
@@ -1215,6 +1238,7 @@
         if (data.riwayat_tabungan) riwayatTabungan = data.riwayat_tabungan;
         if (data.riwayat_penjualan) riwayatPenjualan = data.riwayat_penjualan;
         if (data.pembayaran_wali) pembayaranWali = data.pembayaran_wali;
+        if (data.transaksi) logTransaksiKasir = Object.values(data.transaksi);
         if (data.identitas) identitas = data.identitas;
         if (data.admin_pass) adminPassword = data.admin_pass;
         __cache = Object.assign({}, data);
@@ -1709,7 +1733,8 @@
                 tanggalKey: toDateKey(new Date())
             };
             riwayatTabungan.push(recBelanja);
-            tulisTransaksi(recBelanja);
+            const refRecBelanja = tulisTransaksi(recBelanja);
+            updateSaldoServer(santri, -total, refRecBelanja);
         }
 
         // Kurangi stok
@@ -2001,7 +2026,8 @@
             tanggalKey: toDateKey(new Date())
         };
         riwayatTabungan.push(recTb);
-        tulisTransaksi(recTb);
+        const refRecTb = tulisTransaksi(recTb);
+        updateSaldoServer(santri, jenisTransaksiAktif === 'setor' ? jumlah : -jumlah, refRecTb);
 
         saveAll();
         document.getElementById('jumlahTabungan').value = '';
@@ -2041,7 +2067,7 @@
         if (hapusBtn) {
             if (confirm('Hapus santri ini?')) {
                 santriList = santriList.filter(x => x.id !== parseInt(hapusBtn.dataset.id));
-                saveAll();
+                DB.set('santri', santriList);
                 refreshDaftarSantri();
                 refreshSelectSantri();
                 showToast('Santri dihapus', 'fa-trash', 'text-red-400');
@@ -2087,7 +2113,7 @@
             const newId = santriList.length > 0 ? Math.max(...santriList.map(s => s.id)) + 1 : 1;
             santriList.push({ id: newId, nis, nama, kelas, orangTua: ortu, hp, saldo: 0 });
         }
-        saveAll();
+        DB.set('santri', santriList);
         document.getElementById('modalSantri').classList.add('hidden');
         document.getElementById('modalSantri').classList.remove('flex');
         refreshDaftarSantri();
@@ -2099,7 +2125,9 @@
     function renderRiwayatTabungan(santriFilter = '', tanggalFilter = '') {
         const tbody = document.getElementById('tabelRiwayat');
         tbody.innerHTML = '';
-        let list = [...riwayatTabungan].reverse();
+        const arr = [...riwayatTabungan];
+        const log = (logTransaksiKasir || []).filter(t => t && !arr.some(r => r && r.id === t.id));
+        let list = arr.concat(log).reverse();
         if (santriFilter) list = list.filter(r => r.santriId === parseInt(santriFilter));
         if (tanggalFilter) list = list.filter(r => keyTanggalRecord(r) === tanggalFilter);
 
@@ -2785,7 +2813,8 @@
             tanggal: tglFull(), terkirim: false, tanggalKey: toDateKey(d)
         };
         riwayatTabungan.push(recTopup);
-        tulisTransaksi(recTopup);
+        const refRecTopup = tulisTransaksi(recTopup);
+        updateSaldoServer(santri, jumlah, refRecTopup);
         saveAll();
         document.getElementById('pembayaranJumlah').value = '';
         document.getElementById('pembayaranReferensi').value = '';
@@ -2813,7 +2842,8 @@
                 tanggal: tglFull(), terkirim: false, tanggalKey: p.tanggalKey || toDateKey(new Date())
             };
             riwayatTabungan.push(recKonfirmasi);
-            tulisTransaksi(recKonfirmasi);
+            const refRecKonfirmasi = tulisTransaksi(recKonfirmasi);
+            updateSaldoServer(s, p.jumlah, refRecKonfirmasi);
             saveAll();
             renderPembayaranWali();
             if (typeof refreshDaftarSantri === 'function') refreshDaftarSantri();
