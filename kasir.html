@@ -1198,6 +1198,7 @@
         if (data.identitas) identitas = data.identitas;
         if (data.admin_pass) adminPassword = data.admin_pass;
         __cache = Object.assign({}, data);
+        if (data.identitas) terapkanIdentitas();
         try {
             localStorage.setItem('barokah_full', JSON.stringify(data));
         } catch {}
