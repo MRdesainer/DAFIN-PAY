@@ -293,7 +293,8 @@
         batasMutasi = 20;
         filterMutasi = 'semua';
         document.querySelectorAll('.filterMutasiBtn').forEach(x => x.classList.remove('tab-active'));
-        document.querySelector('.filterMutasiBtn[data-f="semua"]').classList.add('tab-active');
+        const btnSemua = document.querySelector('.filterMutasiBtn[data-f="semua"]');
+        if (btnSemua) btnSemua.classList.add('tab-active');
         renderMutasi();
     }
 
@@ -302,14 +303,22 @@
     let batasMutasi = 20;
 
     function daftarMutasi() {
-        const list = (riwayatTabungan || []).filter(r => r.santriId === santriAktif.id);
-        if (filterMutasi !== 'semua') return list.filter(r => r.jenis === filterMutasi);
-        return list;
+        const raw = riwayatTabungan || [];
+        const arr = Array.isArray(raw) ? raw : Object.values(raw);
+        return arr.filter(r => {
+            if (!r) return false;
+            const sid = (r.santriId !== undefined && r.santriId !== null) ? Number(r.santriId) : Number(r.id);
+            if (sid === Number(santriAktif.id)) return true;
+            if (r.santriNama && r.santriNama === santriAktif.nama) return true;
+            return false;
+        });
     }
     function renderMutasi() {
         const cont = $('mutasiWali');
         cont.innerHTML = '';
-        const semua = daftarMutasi().slice().reverse();
+        let semua = daftarMutasi();
+        if (filterMutasi !== 'semua') semua = semua.filter(r => r.jenis === filterMutasi);
+        semua = semua.slice().reverse();
         const tampil = semua.slice(0, batasMutasi);
         $('jumlahMutasi').textContent = semua.length > 0 ? 'Total ' + semua.length + ' transaksi' : '';
         if (tampil.length === 0) {
