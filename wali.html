@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Wali Santri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0B6B4F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0B6B4F',
+                        secondary: '#E8C25C',
+                        islami: '#1E9E6A',
+                        emas: '#C9A227',
+                        gelap: '#06392A',
+                        krem: '#FAF5EA',
+                        pasir: '#F1E6CD',
+                        pasirTua: '#E7D8B6',
+                        emasTua: '#A8871F'
+                    },
+                    fontFamily: { sans: ['Segoe UI', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .shadow-islami { box-shadow: 0 6px 24px rgba(6, 57, 42, 0.12), 0 2px 10px rgba(201, 162, 39, 0.10); border: 1px solid rgba(201, 162, 39, 0.18); }
+            .teks-emas { background: linear-gradient(90deg, #E8C25C, #C9A227 45%, #F7E8A5 55%, #C9A227); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+        }
+        body {
+            color: #3F3A2E;
+            background-color: #FBF7EE;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1' stroke-opacity='0.07'%3E%3Cpath d='M48 8l8.5 31.5L88 48l-31.5 8.5L48 88l-8.5-31.5L8 48l31.5-8.5z'/%3E%3Ccircle cx='48' cy='48' r='9'/%3E%3Cpath d='M0 0h13.7L0 13.7zM96 0H82.3L96 13.7zM0 96h13.7L0 82.3zM96 96H82.3L96 82.3z'/%3E%3C/g%3E%3C/svg%3E"),
+                linear-gradient(160deg, #FBF7EE 0%, #F6ECD7 55%, #F0E0C3 100%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Overlay menunggu data -->
+    <div id="splash" class="fixed inset-0 z-50 hidden items-center justify-center bg-white/95 backdrop-blur">
+        <div class="text-center">
+            <i class="fas fa-circle-notch fa-spin text-3xl text-primary mb-3"></i>
+            <p class="font-semibold text-primary">Menghubungkan ke koperasi...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-gelap via-primary to-gelap text-white py-4 px-4 shadow-lg relative overflow-hidden">
+        <div class="max-w-lg mx-auto flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-mosque text-2xl text-secondary"></i>
+                <div>
+                    <h1 class="text-lg font-bold teks-emas leading-tight" id="judulWali">APLIKASI WALI</h1>
+                    <p class="text-[11px] opacity-70" id="namaAppWali">Koperasi Santri</p>
+                </div>
+            </div>
+            <span id="statusOnline" class="text-[11px] px-2 py-1 rounded-full bg-white/15 ring-1 ring-white/30">Menghubungi...</span>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+    </header>
+
+    <main class="max-w-lg mx-auto p-4 space-y-4">
+
+        <!-- ======================== LAYAR MASUK ======================== -->
+        <div id="layarMasuk" class="bg-white rounded-xl shadow-islami p-5">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user-friends text-2xl text-secondary"></i>
+                </div>
+                <h2 class="text-lg font-bold">Masuk untuk Orang Tua / Wali</h2>
+                <p class="text-xs text-stone-500 mt-1">Gunakan NIS ananda & nomor HP yang terdaftar di koperasi.</p>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-stone-600 font-medium">NIS Santri</label>
+                    <input type="text" id="loginNis" placeholder="Contoh: 001" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                <div>
+                    <label class="text-sm text-stone-600 font-medium">Nomor HP Orang Tua</label>
+                    <input type="tel" id="loginHp" placeholder="Contoh: 081234567801" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                <button id="btnLoginWali" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold hover:opacity-90 transition ring-1 ring-secondary/40">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Lihat Saldo Ananda
+                </button>
+                <p id="pesanLogin" class="text-xs text-center text-red-500 hidden"></p>
+            </div>
+        </div>
+
+        <!-- ======================== HALAMAN PANTUAN WALI ======================== -->
+        <div id="layarWali" class="hidden space-y-4">
+
+            <!-- Kartu santri -->
+            <div class="bg-white rounded-xl shadow-islami overflow-hidden">
+                <div class="p-4 text-white" style="background:linear-gradient(90deg,#0B6B4F,#06392A);">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-islami flex items-center justify-center text-xl font-bold ring-2 ring-secondary/60" id="avatarSantri">A</div>
+                            <div>
+                                <h2 class="font-bold text-lg leading-tight" id="namaSantri">-</h2>
+                                <p class="text-xs opacity-80" id="infoSantri">NIS - | Kelas -</p>
+                            </div>
+                        </div>
+                        <button id="btnKeluarWali" class="bg-white/15 w-9 h-9 rounded-lg hover:bg-white/25 transition" title="Keluar">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4 bg-krem">
+                    <p class="text-xs text-stone-500"><i class="fas fa-wallet mr-1 text-emas"></i>Sisa Saldo Tabungan Ananda</p>
+                    <p class="text-3xl font-extrabold text-primary" id="saldoSantri">Rp 0</p>
+                    <p class="text-[11px] text-stone-400 mt-1">Diperbarui otomatis setiap kali kasir memproses pembayaran.</p>
+                </div>
+            </div>
+
+            <!-- Rekening koperasi (untuk transfer) -->
+            <div class="bg-white rounded-xl shadow-islami p-4">
+                <h3 class="font-bold text-sm mb-2"><i class="fas fa-university text-emas mr-2"></i>Untuk Pengisian Saldo</h3>
+                <p class="text-xs text-stone-500 mb-3">Silakan transfer ke rekening koperasi, lalu hubungi koperasi untuk konfirmasi. Saldo akan bertambah setelah dikonfirmasi admin.</p>
+                <div id="infoRekening" class="bg-pasir/70 rounded-lg p-3 text-sm space-y-0.5"></div>
+                <button id="btnHubungiKoperasi" class="mt-3 w-full bg-[#25D366] text-white py-2 rounded-lg text-sm font-bold hover:opacity-90 transition">
+                    <i class="fab fa-whatsapp mr-2"></i> Hubungi Koperasi (Kirim Bukti)
+                </button>
+            </div>
+
+            <!-- Mutasi tabungan -->
+            <div class="bg-white rounded-xl shadow-islami p-4">
+                <h3 class="font-bold mb-1"><i class="fas fa-history text-primary mr-2"></i>Mutasi Tabungan</h3>
+                <p class="text-xs text-stone-500 mb-3">Riwayat setoran, penarikan, dan belanja ananda.</p>
+                <div id="mutasiWali" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Pesan konfigurasi -->
+        <div id="pesanConfig" class="hidden bg-amber-50 border border-amber-300 text-amber-800 rounded-xl p-4 text-sm">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            Firebase belum dikonfigurasi. Hubungi pengelola aplikasi.
+        </div>
+    </main>
+
+    <script>
+    // ======================== STATE ========================
+    let santriList = [];
+    let identitas = {};
+    let riwayatTabungan = [];
+    let santriAktif = null;
+    let dataReady = false;
+
+    const $ = id => document.getElementById(id);
+
+    // ======================== UTIL ========================
+    function formatRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+    function setStatus(txt, ok) {
+        const el = $('statusOnline');
+        el.textContent = txt;
+        el.className = 'text-[11px] px-2 py-1 rounded-full ring-1 ' + (ok ? 'bg-green-500/80 ring-green-200' : 'bg-stone-400/60 ring-white/30');
+    }
+
+    // ======================== INIT ========================
+    const cfg = (window.FIREBASE_CONFIG || {});
+    if (!cfg.apiKey || cfg.apiKey.indexOf('PASTE') !== -1) {
+        $('pesanConfig').classList.remove('hidden');
+        $('layarMasuk').classList.add('hidden');
+        setStatus('Lokal', false);
+    } else {
+        $('splash').classList.remove('hidden');
+        $('splash').classList.add('flex');
+        const app = firebase.initializeApp(cfg);
+        firebase.database(app).ref('barokah').on('value', snap => {
+            const data = snap.val() || {};
+            santriList = data.santri || [];
+            identitas = data.identitas || {};
+            riwayatTabungan = data.riwayat_tabungan || [];
+            dataReady = true;
+            $('judulWali').textContent = (identitas.namaApp || 'KOPERASI') + ' - APLIKASI WALI';
+            $('namaAppWali').textContent = (identitas.namaApp || 'Koperasi Santri') + ' | ' + (identitas.alamat || '');
+            setStatus('Online', true);
+            $('splash').classList.add('hidden');
+            $('splash').classList.remove('flex');
+            renderRekening();
+            if (santriAktif) {
+                const nis = String(santriAktif.nis);
+                const hp = String(santriAktif.hp || '').replace(/\D/g, '');
+                santriAktif = santriList.find(x => String(x.nis) === nis && String(x.hp || '').replace(/\D/g, '') === hp)
+                    || santriList.find(x => String(x.nis) === nis);
+                if (santriAktif) tampilkanPantauan();
+            }
+            cobaLoginTersimpan();
+        }, err => {
+            setStatus('Lokal', false);
+            $('splash').classList.add('hidden');
+            $('splash').classList.remove('flex');
+            $('pesanConfig').classList.remove('hidden');
+            $('pesanConfig').innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Gagal terhubung ke server. Periksa koneksi / konfigurasi.';
+        });
+    }
+
+    function renderRekening() {
+        const rk = {
+            bank: identitas.bank || 'Bank Syariah Indonesia',
+            noRek: identitas.noRek || '-',
+            atasNama: identitas.atasNama || identitas.namaApp
+        };
+        $('infoRekening').innerHTML = `
+            <p><span class="text-stone-500 text-xs">Bank</span><br><span class="font-semibold">${rk.bank}</span></p>
+            <p><span class="text-stone-500 text-xs">No. Rekening</span><br><span class="font-bold text-primary">${rk.noRek}</span></p>
+            <p><span class="text-stone-500 text-xs">Atas Nama</span><br>${rk.atasNama}</p>
+        `;
+    }
+
+    // ======================== LOGIN ========================
+    function cobaLoginTersimpan() {
+        try {
+            const s = JSON.parse(localStorage.getItem('wali_session'));
+            if (s && s.nis && s.hp) loginWali(s.nis, s.hp, true);
+        } catch {}
+    }
+    function loginWali(nis, hp, silent) {
+        const s = santriList.find(x => String(x.nis) === String(nis).trim());
+        if (!s) { gagal('NIS tidak ditemukan.', silent); return false; }
+        if (hp && String(s.hp || '').replace(/\D/g, '') !== String(hp).replace(/\D/g, '')) {
+            gagal('Nomor HP tidak cocok dengan data terdaftar.', silent); return false;
+        }
+        santriAktif = s;
+        localStorage.setItem('wali_session', JSON.stringify({ nis: String(nis).trim(), hp: String(hp).trim() }));
+        tampilkanPantauan();
+        return true;
+    }
+    function gagal(pesan, silent) {
+        if (silent) return;
+        const p = $('pesanLogin');
+        p.textContent = pesan;
+        p.classList.remove('hidden');
+    }
+
+    $('btnLoginWali').addEventListener('click', () => {
+        const ok = loginWali($('loginNis').value, $('loginHp').value, false);
+        if (ok) $('pesanLogin').classList.add('hidden');
+    });
+
+    $('btnKeluarWali').addEventListener('click', () => {
+        santriAktif = null;
+        localStorage.removeItem('wali_session');
+        $('layarWali').classList.add('hidden');
+        $('layarMasuk').classList.remove('hidden');
+        $('loginNis').value = '';
+        $('loginHp').value = '';
+    });
+
+    function tampilkanPantauan() {
+        const s = santriAktif;
+        $('layarMasuk').classList.add('hidden');
+        $('layarWali').classList.remove('hidden');
+        $('avatarSantri').textContent = s.nama.charAt(0).toUpperCase();
+        $('namaSantri').textContent = s.nama;
+        $('infoSantri').textContent = `NIS ${s.nis} | Kelas ${s.kelas || '-'}`;
+        $('saldoSantri').textContent = formatRp(s.saldo);
+        renderMutasi();
+    }
+
+    // ======================== MUTASI ========================
+    function renderMutasi() {
+        const cont = $('mutasiWali');
+        cont.innerHTML = '';
+        const list = riwayatTabungan.filter(r => r.santriId === santriAktif.id).reverse().slice(0, 30);
+        if (list.length === 0) {
+            cont.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">Belum ada mutasi.</p>';
+            return;
+        }
+        list.forEach(r => {
+            const div = document.createElement('div');
+            const isSetor = r.jenis === 'setor';
+            const isTarik = r.jenis === 'tarik';
+            const label = isSetor ? 'Setor' : isTarik ? 'Tarik' : 'Belanja';
+            const badge = isSetor
+                ? 'bg-green-100 text-green-700'
+                : isTarik ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
+            const icon = isSetor ? 'fa-arrow-down' : isTarik ? 'fa-arrow-up' : 'fa-shopping-bag';
+            div.className = 'flex items-center justify-between gap-2 bg-krem border border-pasirTua rounded-lg p-2.5 text-sm';
+            div.innerHTML = `
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 rounded-full ${badge} flex items-center justify-center shrink-0">
+                        <i class="fas ${icon} text-xs"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-semibold">${label} <span class="font-normal text-stone-500">- ${r.keterangan || ''}</span></p>
+                        <p class="text-xs text-stone-400">${r.tanggal || ''}</p>
+                    </div>
+                </div>
+                <div class="text-right shrink-0">
+                    <p class="font-bold ${isSetor ? 'text-green-600' : isTarik ? 'text-red-500' : 'text-stone-700'}">
+                        ${isSetor ? '+' : '-'}${formatRp(r.jumlah)}
+                    </p>
+                    <p class="text-[11px] text-stone-400">Saldo ${formatRp(r.saldo)}</p>
+                </div>
+            `;
+            cont.appendChild(div);
+        });
+    }
+
+    // ======================== HUBUNGI KOPERASI ========================
+    $('btnHubungiKoperasi').addEventListener('click', () => {
+        if (!santriAktif) return;
+        const hp = String(identitas.telepon || '').replace(/\D/g, '');
+        if (!hp) { $('pesanConfig').classList.remove('hidden'); $('pesanConfig').innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Nomor koperasi belum diatur (Pengaturan -> Telepon).'; return; }
+        const pesan = `Assalamu'alaikum Wr. Wb. Saya ${santriAktif.orangTua || 'wali'} dari *${santriAktif.nama}* (NIS: ${santriAktif.nis}, Kelas: ${santriAktif.kelas}).\n\nSaya ingin konfirmasi pengisian saldo / menanyakan saldo ananda.\nSaldo saat ini: *${formatRp(santriAktif.saldo)}*`;
+        const wa = hp.replace(/^0/, '62');
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(pesan)}`, '_blank');
+    });
+    </script>
+    <script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+    </script>
+</body>
+</html>

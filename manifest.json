@@ -1,0 +1,16 @@
+{
+    "name": "Kasir & Tabungan Barokah",
+    "short_name": "Kasir Barokah",
+    "description": "Koperasi santri: kasir, tabungan, dan pembayaran wali terintegrasi.",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#FBF7EE",
+    "theme_color": "#0B6B4F",
+    "icons": [
+        { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

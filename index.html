@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir & Tabungan Barokah</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0B6B4F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0B6B4F', secondary: '#E8C25C', islami: '#1E9E6A',
+                        emas: '#C9A227', gelap: '#06392A', krem: '#FAF5EA',
+                        pasir: '#F1E6CD', pasirTua: '#E7D8B6', emasTua: '#A8871F'
+                    },
+                    fontFamily: { sans: ['Segoe UI', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            color: #3F3A2E;
+            background-color: #FBF7EE;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1' stroke-opacity='0.07'%3E%3Cpath d='M48 8l8.5 31.5L88 48l-31.5 8.5L48 88l-8.5-31.5L8 48l31.5-8.5z'/%3E%3Ccircle cx='48' cy='48' r='9'/%3E%3Cpath d='M0 0h13.7L0 13.7zM96 0H82.3L96 13.7zM0 96h13.7L0 82.3zM96 96H82.3L96 82.3z'/%3E%3C/g%3E%3C/svg%3E"),
+                linear-gradient(160deg, #FBF7EE 0%, #F6ECD7 55%, #F0E0C3 100%);
+            background-attachment: fixed;
+        }
+        .shadow-islami { box-shadow: 0 6px 24px rgba(6, 57, 42, 0.12), 0 2px 10px rgba(201, 162, 39, 0.10); border: 1px solid rgba(201, 162, 39, 0.18); }
+        .teks-emas { background: linear-gradient(90deg, #E8C25C, #C9A227 45%, #F7E8A5 55%, #C9A227); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+        <div class="text-center mb-6">
+            <img src="icons/icon-192.png" alt="Logo" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-islami">
+            <h1 class="text-2xl font-extrabold teks-emas">KASIR BAROKAH</h1>
+            <p class="text-sm text-stone-500 mt-1">Koperasi Santri - Kasir, Tabungan & Pembayaran Wali</p>
+        </div>
+
+        <div class="space-y-3">
+            <a href="kasir.html" class="block bg-gradient-to-r from-primary to-gelad p-4 rounded-xl shadow-islami hover:opacity-90 transition" style="background:linear-gradient(90deg,#0B6B4F,#06392A);">
+                <div class="flex items-center gap-3 text-white">
+                    <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
+                        <i class="fas fa-cash-register text-2xl text-secondary"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold">Aplikasi Kasir</p>
+                        <p class="text-xs opacity-80">Untuk penjaga koperasi & admin</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="wali.html" class="block bg-white p-4 rounded-xl shadow-islami hover:border-emas transition">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-islami flex items-center justify-center">
+                        <i class="fas fa-user-friends text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-primary">Aplikasi Wali</p>
+                        <p class="text-xs text-stone-500">Untuk orang tua / wali santri</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <p class="text-center text-[11px] text-stone-400 mt-6">
+            <i class="fas fa-mobile-alt mr-1"></i> Pasang di Android: menu browser &rarr; "Tambahkan ke Layar Utama"
+        </p>
+    </div>
+
+    <script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+    </script>
+</body>
+</html>
