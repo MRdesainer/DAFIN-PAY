@@ -144,7 +144,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-bold"><i class="fas fa-history text-primary mr-2"></i>Mutasi Tabungan</h3>
-                        <p class="text-xs text-stone-500 mt-0.5">Semua transaksi ananda, diperbarui realtime.</p>
+                        <p class="text-xs text-stone-500 mt-0.5">Mutasi <span id="namaMutasi" class="font-semibold text-primary"></span>, diperbarui realtime.</p>
                     </div>
                     <span id="jumlahMutasi" class="text-[11px] bg-pasir text-stone-500 px-2 py-1 rounded-full shrink-0"></span>
                 </div>
@@ -291,6 +291,7 @@
         $('avatarSantri').textContent = s.nama.charAt(0).toUpperCase();
         $('namaSantri').textContent = s.nama;
         $('infoSantri').textContent = `NIS ${s.nis} | Kelas ${s.kelas || '-'}`;
+        $('namaMutasi').textContent = s.nama;
         $('saldoSantri').textContent = formatRp(s.saldo);
         batasMutasi = 20;
         filterMutasi = 'semua';
@@ -309,12 +310,13 @@
         const arr = Array.isArray(raw) ? raw : Object.values(raw);
         const log = (logTransaksi || []).filter(t => t && !arr.some(r => r && r.id === t.id));
         const gabungan = arr.concat(log);
+        const idAktif = Number(santriAktif.id);
         return gabungan.filter(r => {
             if (!r) return false;
-            const sid = (r.santriId !== undefined && r.santriId !== null) ? Number(r.santriId) : Number(r.id);
-            if (sid === Number(santriAktif.id)) return true;
-            if (r.santriNama && r.santriNama === santriAktif.nama) return true;
-            return false;
+            if (r.santriId !== undefined && r.santriId !== null && String(r.santriId).trim() !== '') {
+                return Number(r.santriId) === idAktif;
+            }
+            return r.santriNama && r.santriNama === santriAktif.nama;
         });
     }
     function renderMutasi() {
