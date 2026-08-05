@@ -1420,7 +1420,16 @@
         if (!window.__fbReady || !window.__authReady || window.__firstSyncDone) return;
         const splash = document.getElementById('splashOnline');
         const initial = { produk: produkList, santri: santriList, riwayat_tabungan: riwayatTabungan, riwayat_penjualan: riwayatPenjualan, pembayaran_wali: pembayaranWali, identitas: identitas, admin_pass: adminPassword, admin_user: adminUsername };
-        firebase.database().ref('barokah').set(initial).then(() => {
+        // Aman: cek dulu isi server. Seed hanya jika node barokah benar-benar kosong,
+        // agar data toko yang sudah ada di server tidak tertimpa default perangkat.
+        firebase.database().ref('barokah').once('value').then(snap => {
+            if (snap.exists()) {
+                applySnapshot(snap.val());
+                window.__firstSyncDone = true;
+                return true;
+            }
+            return firebase.database().ref('barokah').set(initial).then(() => true);
+        }).then(() => {
             window.__firstSyncDone = true;
             setStatusOnline('Online', true);
             splash.classList.add('hidden');
