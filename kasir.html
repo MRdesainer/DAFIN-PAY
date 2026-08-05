@@ -553,7 +553,7 @@
                                 <th class="p-2 text-left">Kode</th>
                                 <th class="p-2 text-left">Nama Barang</th>
                                 <th class="p-2 text-right">Harga</th>
-                                <th class="p-2 text-center">Diskon</th>
+                                <th class="p-2 text-center">Promo</th>
                                 <th class="p-2 text-center">Stok</th>
                                 <th class="p-2 text-center">Halal</th>
                                 <th class="p-2 text-center">Aksi</th>
@@ -1138,10 +1138,17 @@
                     <label class="text-sm text-stone-600">Harga (Rp)</label>
                     <input type="number" id="inputHargaBarang" placeholder="0" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
                 </div>
-                <div>
-                    <label class="text-sm text-stone-600">Diskon (%)</label>
-                    <input type="number" id="inputDiskonBarang" min="0" max="100" placeholder="0" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-sm text-stone-600">Promo Beli</label>
+                        <input type="number" id="inputBeliBarang" min="0" placeholder="cth: 2" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-stone-600">Gratis</label>
+                        <input type="number" id="inputGratisBarang" min="0" placeholder="cth: 1" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                    </div>
                 </div>
+                <p class="text-[11px] text-stone-400 -mt-2">Contoh "Beli 2 Gratis 1": santri ambil 3 biji, bayar 2 biji (1 gratis).</p>
                 <div>
                     <label class="text-sm text-stone-600">Stok</label>
                     <input type="number" id="inputStokBarang" placeholder="0" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
@@ -1803,17 +1810,14 @@
             div.dataset.harga = p.harga;
             div.dataset.kode = p.kode;
             div.dataset.id = p.id;
-            const diskon = parseFloat(p.diskon) || 0;
-            const hargaJual = hargaJualProduk(p);
             div.innerHTML = `
                 <div class="text-2xl mb-1">${p.emoji || '📦'}</div>
                 <div class="text-sm font-medium">${p.nama}</div>
-                ${diskon > 0 ? `
-                    <div class="text-xs">
-                        <span class="text-stone-400 line-through">${formatRp(p.harga)}</span>
-                        <span class="bg-red-500 text-white rounded px-1 ml-1">-${diskon}%</span>
+                ${p.beli && p.gratis ? `
+                    <div class="text-[10px]">
+                        <span class="bg-red-500 text-white rounded px-1">Beli ${p.beli} Gratis ${p.gratis}</span>
                     </div>` : ''}
-                <div class="text-xs text-primary font-bold">${formatRp(hargaJual)}</div>
+                <div class="text-xs text-primary font-bold">${formatRp(p.harga)}</div>
                 <div class="text-xs ${p.stok > 0 ? 'text-green-500' : 'text-red-500'}">Stok: ${p.stok}</div>
             `;
             if (p.stok > 0) {
@@ -1837,7 +1841,7 @@
             if (ada.jumlah >= produk.stok) { showToast('Stok tidak cukup!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
             ada.jumlah++;
         } else {
-            keranjang.push({ id: produk.id, nama: produk.nama, harga: hargaJualProduk(produk), kode: produk.kode, jumlah: 1, stok: produk.stok, diskon: parseFloat(produk.diskon) || 0 });
+            keranjang.push({ id: produk.id, nama: produk.nama, harga: produk.harga, kode: produk.kode, jumlah: 1, stok: produk.stok, beli: produk.beli || 0, gratis: produk.gratis || 0 });
         }
         updateKeranjang();
         showToast(produk.nama + ' ditambahkan');
@@ -1851,14 +1855,15 @@
         } else {
             daftar.innerHTML = '';
             keranjang.forEach((item, idx) => {
-                const sub = item.harga * item.jumlah;
+                const pr = hitungPromo(item.beli, item.gratis, item.jumlah);
+                const sub = biayaItem(item);
                 subtotal += sub;
                 const row = document.createElement('div');
                 row.className = 'flex justify-between items-center py-2 border-b border-pasir';
                 row.innerHTML = `
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-medium truncate">${item.nama}</div>
-                        <div class="text-xs text-stone-500">${formatRp(item.harga)} x ${item.jumlah} = ${formatRp(sub)}</div>
+                        <div class="text-xs text-stone-500">${formatRp(item.harga)} x ${item.jumlah}${pr.qtyGratis ? ` <span class="text-red-500 font-bold">(${pr.qtyGratis} gratis)</span>` : ''} = ${formatRp(sub)}</div>
                     </div>
                     <div class="flex items-center gap-1 ml-2 shrink-0">
                         <button class="kurangi px-2 py-1 bg-pasir rounded text-sm hover:bg-pasirTua" data-idx="${idx}">-</button>
@@ -1870,8 +1875,12 @@
                 daftar.appendChild(row);
             });
         }
+        const totalHemat = keranjang.reduce((s, k) => {
+            const pr = hitungPromo(k.beli, k.gratis, k.jumlah);
+            return s + pr.qtyGratis * k.harga;
+        }, 0);
         document.getElementById('subtotalDisplay').textContent = formatRp(subtotal);
-        document.getElementById('diskonDisplay').textContent = '- Rp 0';
+        document.getElementById('diskonDisplay').textContent = totalHemat > 0 ? '- ' + formatRp(totalHemat) : '- Rp 0';
         document.getElementById('totalBayar').textContent = formatRp(subtotal);
         document.getElementById('modalTotal').textContent = formatRp(subtotal);
     }
@@ -1956,7 +1965,7 @@
     document.getElementById('jumlahBayar').addEventListener('input', hitungKembalian);
 
     function hitungKembalian() {
-        const total = keranjang.reduce((s, k) => s + k.harga * k.jumlah, 0);
+        const total = keranjang.reduce((s, k) => s + biayaItem(k), 0);
         const bayar = parseInt(document.getElementById('jumlahBayar').value) || 0;
         const kembali = bayar - total;
         const box = document.getElementById('infoKembalian');
@@ -1979,9 +1988,9 @@
             const s = santriList.find(x => x.id === parseInt(sel.value));
             const info = document.getElementById('infoSaldoBayar');
             if (s) {
-                info.textContent = `Saldo: ${formatRp(s.saldo)} ${s.saldo < keranjang.reduce((a, k) => a + k.harga * k.jumlah, 0) ? '⚠️ Saldo kurang' : '✓ Cukup'}`;
+                info.textContent = `Saldo: ${formatRp(s.saldo)} ${s.saldo < keranjang.reduce((a, k) => a + biayaItem(k), 0) ? '⚠️ Saldo kurang' : '✓ Cukup'}`;
                 info.classList.remove('hidden');
-                info.className = 'text-xs mt-1 ' + (s.saldo < keranjang.reduce((a, k) => a + k.harga * k.jumlah, 0) ? 'text-red-500' : 'text-green-600');
+                info.className = 'text-xs mt-1 ' + (s.saldo < keranjang.reduce((a, k) => a + biayaItem(k), 0) ? 'text-red-500' : 'text-green-600');
             } else {
                 info.classList.add('hidden');
             }
@@ -1991,7 +2000,7 @@
     let transaksiTerakhir = null;
 
     function prosesBayar() {
-        const total = keranjang.reduce((s, k) => s + k.harga * k.jumlah, 0);
+        const total = keranjang.reduce((s, k) => s + biayaItem(k), 0);
         if (total === 0) return;
 
         let bayar = 0;
@@ -2086,7 +2095,9 @@
         html += `<div class="text-center mb-2">${tglFull()}</div>`;
         html += `<div class="border-t border-dashed border-gray-400 my-1"></div>`;
         trx.items.forEach(it => {
-            html += `<div class="flex justify-between"><span>${it.nama} x${it.jumlah}${it.diskon ? ` <span class="text-red-500">(-${it.diskon}%)</span>` : ''}</span><span>${formatRp(it.harga * it.jumlah)}</span></div>`;
+            const pr = hitungPromo(it.beli, it.gratis, it.jumlah);
+            const bonus = pr.qtyGratis ? ` <span class="text-red-500">(${pr.qtyGratis} gratis)</span>` : '';
+            html += `<div class="flex justify-between"><span>${it.nama} x${it.jumlah}${bonus}</span><span>${formatRp(biayaItem(it))}</span></div>`;
         });
         html += `<div class="border-t border-dashed border-gray-400 my-1"></div>`;
         html += `<div class="flex justify-between font-bold text-base"><span>TOTAL</span><span>${formatRp(trx.total)}</span></div>`;
@@ -2158,8 +2169,9 @@
         lines.push(' *Detail Pembelian:*');
 
         trx.items.forEach((it, i) => {
-            const disc = it.diskon ? ` (-${it.diskon}%)` : '';
-            lines.push(` ${i + 1}. ${it.nama}${disc} x${it.jumlah} = ${formatRp(it.harga * it.jumlah)}`);
+            const pr = hitungPromo(it.beli, it.gratis, it.jumlah);
+            const bonus = pr.qtyGratis ? ` (${pr.qtyGratis} gratis)` : '';
+            lines.push(` ${i + 1}. ${it.nama}${bonus} x${it.jumlah} = ${formatRp(biayaItem(it))}`);
         });
 
         lines.push('');
@@ -3464,9 +3476,16 @@
     });
 
     // ======================== HALAMAN BARANG ========================
-    function hargaJualProduk(p) {
-        const diskon = parseFloat(p.diskon) || 0;
-        return Math.round((p.harga * (100 - diskon)) / 100);
+    function hitungPromo(beli, gratis, qty) {
+        beli = parseInt(beli) || 0;
+        gratis = parseInt(gratis) || 0;
+        if (beli < 1 || gratis < 1 || qty < beli + gratis) return { qtyBayar: qty, qtyGratis: 0 };
+        const qtyGratis = gratis * Math.floor(qty / (beli + gratis));
+        return { qtyBayar: qty - qtyGratis, qtyGratis };
+    }
+    function biayaItem(it) {
+        const pr = hitungPromo(it.beli, it.gratis, it.jumlah);
+        return it.harga * pr.qtyBayar;
     }
     function renderTabelBarang() {
         const tbody = document.getElementById('tabelBarang');
@@ -3478,7 +3497,7 @@
                 <td class="p-2 text-xs">${p.kode}</td>
                 <td class="p-2 text-sm">${p.emoji || ''} ${p.nama}</td>
                 <td class="p-2 text-right text-sm">${formatRp(p.harga)}</td>
-                <td class="p-2 text-center text-sm">${p.diskon ? `<span class="text-red-500 font-bold">${p.diskon}%</span>` : '-'}</td>
+                <td class="p-2 text-center text-sm">${p.beli && p.gratis ? `<span class="text-red-500 font-bold">${p.beli}+${p.gratis}</span>` : '-'}</td>
                 <td class="p-2 text-center text-sm ${p.stok < 10 ? 'text-red-500 font-bold' : ''}">${p.stok}</td>
                 <td class="p-2 text-center">${p.halal ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-times-circle text-red-500"></i>'}</td>
                 <td class="p-2 text-center">
@@ -3495,7 +3514,8 @@
         document.getElementById('inputKodeBarang').value = '';
         document.getElementById('inputNamaBarang').value = '';
         document.getElementById('inputHargaBarang').value = '';
-        document.getElementById('inputDiskonBarang').value = '0';
+        document.getElementById('inputBeliBarang').value = '';
+        document.getElementById('inputGratisBarang').value = '';
         document.getElementById('inputStokBarang').value = '';
         document.getElementById('inputEmojiBarang').value = '📦';
         document.getElementById('inputHalalBarang').checked = true;
@@ -3519,7 +3539,8 @@
                 document.getElementById('inputKodeBarang').value = p.kode;
                 document.getElementById('inputNamaBarang').value = p.nama;
                 document.getElementById('inputHargaBarang').value = p.harga;
-                document.getElementById('inputDiskonBarang').value = p.diskon || 0;
+                document.getElementById('inputBeliBarang').value = p.beli || '';
+                document.getElementById('inputGratisBarang').value = p.gratis || '';
                 document.getElementById('inputStokBarang').value = p.stok;
                 document.getElementById('inputEmojiBarang').value = p.emoji || '📦';
                 document.getElementById('inputHalalBarang').checked = p.halal;
@@ -3546,13 +3567,14 @@
         const kode = document.getElementById('inputKodeBarang').value.trim();
         const nama = document.getElementById('inputNamaBarang').value.trim();
         const harga = parseInt(document.getElementById('inputHargaBarang').value) || 0;
-        const diskon = parseFloat(document.getElementById('inputDiskonBarang').value) || 0;
+        const beli = parseInt(document.getElementById('inputBeliBarang').value) || 0;
+        const gratis = parseInt(document.getElementById('inputGratisBarang').value) || 0;
         const stok = parseInt(document.getElementById('inputStokBarang').value) || 0;
         const emoji = document.getElementById('inputEmojiBarang').value.trim() || '📦';
         const halal = document.getElementById('inputHalalBarang').checked;
 
         if (!kode || !nama || !harga) { showToast('Kode, Nama, dan Harga wajib diisi!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-        if (diskon < 0 || diskon > 100) { showToast('Diskon harus antara 0 - 100%!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+        if (beli > 0 && gratis < 1) { showToast('Isi jumlah "Gratis" minimal 1 agar promo berlaku!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
         if (produkList.some(p => p.kode === kode && p.id !== parseInt(editId || 0))) {
             showToast('Kode barang sudah digunakan!', 'fa-exclamation-triangle', 'text-yellow-400'); return;
         }
@@ -3560,9 +3582,9 @@
         let dataBarang = null;
         if (editId) {
             dataBarang = produkList.find(x => x.id === parseInt(editId));
-            if (dataBarang) { dataBarang.kode = kode; dataBarang.nama = nama; dataBarang.harga = harga; dataBarang.diskon = diskon; dataBarang.stok = stok; dataBarang.emoji = emoji; dataBarang.halal = halal; }
+            if (dataBarang) { dataBarang.kode = kode; dataBarang.nama = nama; dataBarang.harga = harga; dataBarang.beli = beli; dataBarang.gratis = gratis; dataBarang.stok = stok; dataBarang.emoji = emoji; dataBarang.halal = halal; }
         } else {
-            dataBarang = { id: Date.now(), kode, nama, harga, diskon, stok: stok || 0, emoji, halal };
+            dataBarang = { id: Date.now(), kode, nama, harga, beli, gratis, stok: stok || 0, emoji, halal };
             produkList.push(dataBarang);
         }
         simpanLokal('produk');
