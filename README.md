@@ -5,12 +5,17 @@ jauh bisa membayar lewat HP mereka dan datanya tersinkron realtime dengan kasir.
 Aplikasi ini bisa **dipasang di HP Android** (ada ikon, layar penuh) dan bisa dijadikan
 **APK** untuk dibagikan / dipasang resmi.
 
+> **Panduan setup lengkap ada di [`SETUP.md`](SETUP.md)** — termasuk langkah untuk
+> menyiapkan proyek Firebase gratis, aturan keamanan, dan checklist saat menjual ke toko lain.
+
 ## Isi Folder
 - `kasir.html` — aplikasi kasir untuk penjaga koperasi / admin (tersinkron realtime)
 - `wali.html` — aplikasi pantau untuk orang tua / wali (**hanya melihat** saldo & mutasi anak)
 - `index.html` — halaman pembuka: pilih "Aplikasi Kasir" atau "Aplikasi Wali"
 - `config.js` — **isi konfigurasi Firebase Anda di sini**
+- `rules.json` — **aturan keamanan Firebase (wajib ditempel ke Realtime Database)**
 - `manifest.json` + `icons/` + `sw.js` — pembungkus aplikasi Android (PWA)
+- `SETUP.md` — panduan setup & persiapan penjualan
 - `README.md` — panduan ini
 
 ## Cara Kerja (sesuai keinginan Anda)
@@ -28,12 +33,14 @@ Aplikasi ini bisa **dipasang di HP Android** (ada ikon, layar penuh) dan bisa di
 3. Beri nama (misal "Kasir Barokah"), centang "Juga siapkan Firebase Hosting" (opsional), klik **Daftarkan aplikasi**.
 4. Anda akan melihat **config** (apiKey, authDomain, databaseURL, dll). **Salin** nilai-nilainya.
 
-## Langkah 2: Aktifkan Realtime Database
+## Langkah 2: Aktifkan Realtime Database + Authentication
 1. Di menu kiri: **Build -> Realtime Database** -> klik **Buat Database**.
 2. Pilih lokasi terdekat (misal asia-southeast1), mode **Test mode** -> Aktifkan.
-   > Catatan: mode Test membuka akses baca/tulis semua orang selama 30 hari, lalu
-   > otomatis menutup. Untuk aplikasi pondok, cukup aman. (Nanti bisa diperketat
-   > lewat menu Rules jika diperlukan.)
+   > Mode Test hanya sementara. **Wajib** menempelkan aturan dari `rules.json`
+   > (tab Rules -> tempel -> Publish) agar database aman dan tidak terkunci.
+3. Menu kiri: **Build -> Authentication** -> **Get started** -> tab **Sign-in method**
+   -> aktifkan **Email/Password** -> tab **Users** -> **Add user** (email + sandi kasir).
+   Email & sandi inilah yang dipakai login aplikasi kasir.
 
 ## Langkah 3: Isi config.js
 Buka `online/config.js`, ganti nilai `PASTE_*` dengan milik Anda, contoh:
@@ -80,12 +87,31 @@ Aplikasi ini siap dikemas jadi APK tanpa komputer khusus, lewat **PWABuilder**:
 > Catatan: versi APK dari PWABuilder memerlukan setidaknya sekali terkoneksi internet
 > saat pertama dibuka (data tetap tersinkron realtime via Firebase).
 
+## Keamanan & Skala (anti-benturan data)
+- **Satu proyek Firebase = satu instansi/toko.** Jangan memakai `config.js` yang sama untuk
+  toko yang berbeda — data mereka akan bercampur di node `barokah`. Setiap toko wajib punya
+  proyek Firebase sendiri (tinggal beda isi `config.js`).
+- **Login kasir via Firebase Authentication** (email + sandi). Aturan `rules.json` mengizinkan
+  siapa pun membaca (agar wali bisa lihat saldo), tetapi **hanya akun kasir yang sudah login
+  yang bisa menulis** — sandi tidak lagi tersimpan di database.
+- **Banyak HP kasir di satu toko aman**: transaksi penjualan pakai log append-only, saldo & stok
+  dihitung atomik per-id, dan perubahan daftar santri/barang digabung lewat transaksi server —
+  sehingga dua kasir yang menulis bersamaan tidak saling menimpa.
+- **Saat aplikasi dijual/diberikan ke toko lain**: buatkan kunci lisensi per toko dengan
+  `node buat-lisensi.js "Nama Toko" [tanggal]`. Untuk pengaman lebih ketat (satu kunci satu toko,
+  tidak bisa disebar), validasi kunci perlu dicek ke server/Firebase — hubungi pengembang untuk
+  mengaktifkan ini.
+
 ## Tips
 - **Data awal**: saat `kasir.html` dibuka pertama kali dan database masih kosong,
-  data bawaan (produk & santri) otomatis diunggah ke server. Isi/edit santri lewat kasir dulu
-  agar data wali lengkap (nomor HP orang tua penting untuk login).
-- **Akses pertama**: buka `kasir.html` dari browser Anda dulu (sekali), supaya data default ter-seed.
+  data bawaan (produk & santri) otomatis diunggah ke server **setelah login kasir berhasil**.
+  Isi/edit santri lewat kasir dulu agar data wali lengkap (nomor HP orang tua penting untuk login).
+- **Akses pertama**: buka `kasir.html`, **login dulu** dengan email & password dari Firebase
+  Authentication (buat akun di Console), baru data default ter-seed.
 - **File offline** `KasirDafin.html` di folder utama tetap bisa dipakai tanpa internet (data lokal).
+- **Kasir offline tetap aman**: saat HP kasir tidak terhubung internet, penjualan/saldo/stok
+  dicatat dulu (status "Menunggu sinkron...") lalu otomatis dikirim begitu koneksi pulih —
+  tidak ada perubahan yang hilang tertimpa data server.
 - **Reset data server**: jalankan `kasir.html` -> Pengaturan -> Reset Semua Data hanya menghapus
   localStorage perangkat, bukan data Firebase. Untuk membersihkan Firebase, hapus node `barokah`
   di Realtime Database lewat konsol.

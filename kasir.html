@@ -12,6 +12,7 @@
     <script src="config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <link rel="manifest" href="manifest-kasir.json">
     <meta name="theme-color" content="#0B6B4F">
     <meta name="mobile-web-app-capable" content="yes">
@@ -68,8 +69,8 @@
         <div class="w-full max-w-sm text-center">
             <img src="icons/icon-192.png" alt="Logo" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-islami object-cover">
             <h1 class="text-2xl font-extrabold teks-emas">Aplikasi Kasir</h1>
-            <p class="text-sm text-stone-500 mt-1 mb-4">Masukkan username & password admin untuk masuk.</p>
-            <input id="lockUsername" type="text" placeholder="Username admin" class="w-full border rounded-lg py-2 px-3 text-sm text-center mb-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            <p class="text-sm text-stone-500 mt-1 mb-4">Masukkan email & password admin untuk masuk.</p>
+            <input id="lockUsername" type="email" inputmode="email" placeholder="Email admin (mis. kasir@pondok.id)" class="w-full border rounded-lg py-2 px-3 text-sm text-center mb-2 focus:ring-2 focus:ring-primary focus:border-primary">
             <input id="lockPassword" type="password" placeholder="Password admin" class="w-full border rounded-lg py-2 px-3 text-sm text-center focus:ring-2 focus:ring-primary focus:border-primary">
             <p id="lockPesan" class="text-xs text-red-500 mt-2 hidden"></p>
             <button id="btnLockMasuk" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold mt-3 ring-1 ring-secondary/40">Masuk</button>
@@ -803,10 +804,11 @@
 
                 <!-- Password Admin -->
                 <div class="bg-white rounded-xl shadow-islami p-4">
-                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-shield-alt text-primary mr-2"></i>Akun Admin (Username & Password)</h3>
+                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-shield-alt text-primary mr-2"></i>Akun Admin (Email & Password)</h3>
                     <div class="space-y-3">
+                        <p class="text-[11px] text-stone-400">Mode online: login memakai email & password Firebase Authentication (buat akun di Firebase Console → Authentication → Users).</p>
                         <div>
-                            <label class="text-sm text-stone-600 font-medium">Username Baru</label>
+                            <label class="text-sm text-stone-600 font-medium">Username Baru <span class="text-[10px] text-stone-400">(hanya mode offline)</span></label>
                             <input type="text" id="setUsername" class="w-full border rounded-lg py-2 px-3 text-sm mt-1" placeholder="Kosongkan jika tidak diubah">
                             <p class="text-[11px] text-stone-400 mt-1">Default: admin</p>
                         </div>
@@ -815,7 +817,7 @@
                             <input type="password" id="setPassLama" class="w-full border rounded-lg py-2 px-3 text-sm mt-1" placeholder="Password lama">
                         </div>
                         <div>
-                            <label class="text-sm text-stone-600 font-medium">Password Baru</label>
+                            <label class="text-sm text-stone-600 font-medium">Password Baru <span class="text-[10px] text-stone-400">(min. 6 karakter online)</span></label>
                             <input type="password" id="setPassBaru" class="w-full border rounded-lg py-2 px-3 text-sm mt-1" placeholder="Password baru">
                         </div>
                         <div>
@@ -1186,11 +1188,125 @@
         set(key, val) {
             __cache[key] = val;
             try { localStorage.setItem('barokah_' + key, JSON.stringify(val)); } catch {}
-            if (window.__fbReady) {
+            // Data kolektif (dipakai banyak perangkat) ditulis lewat transaksi atomik
+            // (lihat ubahServer), bukan .set utuh, agar tidak saling menimpa.
+            const KEY_TRANSAKSI = ['santri', 'produk', 'riwayat_tabungan', 'riwayat_penjualan', 'pembayaran_wali'];
+            if (window.__fbReady && KEY_TRANSAKSI.indexOf(key) === -1) {
                 firebase.database().ref('barokah/' + key).set(val).catch(() => {});
             }
         }
     };
+
+    function simpanLokal(key) {
+        let val = null;
+        if (key === 'santri') val = santriList;
+        else if (key === 'produk') val = produkList;
+        else if (key === 'riwayat_tabungan') val = riwayatTabungan;
+        else if (key === 'riwayat_penjualan') val = riwayatPenjualan;
+        else if (key === 'pembayaran_wali') val = pembayaranWali;
+        if (val !== null) {
+            try { localStorage.setItem('barokah_' + key, JSON.stringify(val)); } catch {}
+        }
+    }
+
+    function terapkanHasil(key, val) {
+        if (key === 'santri') santriList = val;
+        else if (key === 'produk') produkList = val;
+        else if (key === 'riwayat_tabungan') riwayatTabungan = val;
+        else if (key === 'riwayat_penjualan') riwayatPenjualan = val;
+        else if (key === 'pembayaran_wali') pembayaranWali = val;
+        try { localStorage.setItem('barokah_' + key, JSON.stringify(val)); } catch {}
+    }
+
+    // ---- Antrean tulis offline ----
+    // Transaksi Firebase (ubahServer) TIDAK ikut antre offline otomatis seperti set()/push(),
+    // jadi saat tidak terhubung operasinya dicatat ke localStorage lalu diputar ulang
+    // begitu koneksi pulih (lihat flushAntrean). Mencegah perubahan hilang tertimpa server.
+    window.__connected = false;
+    let __flushing = false;
+
+    function ambilkanAntrean() {
+        try {
+            const q = JSON.parse(localStorage.getItem('barokah_pending') || '[]');
+            return Array.isArray(q) ? q : [];
+        } catch (e) { return []; }
+    }
+    function simpanAntrean(q) {
+        try { localStorage.setItem('barokah_pending', JSON.stringify(q.slice(-200))); } catch (e) {}
+    }
+    function antreOperasi(key, mode, payload) {
+        const q = ambilkanAntrean();
+        q.push({ _id: Date.now() + '_' + Math.random().toString(36).slice(2, 8), key: key, mode: mode, payload: payload });
+        simpanAntrean(q);
+        setStatusOnline('Menunggu sinkron...', false);
+    }
+    function flushAntrean() {
+        if (__flushing || !window.__fbReady || !window.__authReady || window.__connected !== true) return;
+        const q = ambilkanAntrean();
+        if (!q.length) return;
+        const op = q[0];
+        __flushing = true;
+        ubahServer(op.key, op.mode, op.payload, (err, committed) => {
+            __flushing = false;
+            if (!err && committed) {
+                const q2 = ambilkanAntrean();
+                if (q2.length && q2[0]._id === op._id) {
+                    q2.shift();
+                    simpanAntrean(q2);
+                }
+            }
+            if (ambilkanAntrean().length === 0) setStatusOnline('Online', true);
+            setTimeout(flushAntrean, 400);
+        }, true);
+    }
+
+    // Tulis atomik ke server (anti-benturan): perubahan digabung dengan data server
+    // terkini lewat transaksi Firebase, sehingga dua perangkat yang menulis bersamaan
+    // tidak saling menimpa.
+    //   'append'     -> tambah/perbarui record per id
+    //   'remove'     -> hapus record per id
+    //   'deltaSaldo' -> tambah/kurang saldo santri per id (aman saat bersamaan)
+    //   'deltaStok'  -> tambah/kurang stok produk per kode (aman saat bersamaan)
+    function ubahServer(key, mode, payload, cb, noEnqueue) {
+        if (!window.__fbReady) { if (cb) cb(null, false, null); return; }
+        if (window.__connected === false) {
+            // Terputus: catat dulu ke antrean, diputar ulang saat koneksi pulih.
+            if (!noEnqueue) antreOperasi(key, mode, payload);
+            if (cb) cb(null, false, null);
+            return;
+        }
+        firebase.database().ref('barokah/' + key).transaction(cur => {
+            let arr = Array.isArray(cur) ? cur.slice() : [];
+            if (mode === 'append') {
+                const list = Array.isArray(payload) ? payload : [payload];
+                list.forEach(p => {
+                    if (!p || p.id === undefined) return;
+                    const i = arr.findIndex(x => x && x.id === p.id);
+                    if (i === -1) arr.push(p); else arr[i] = p;
+                });
+            } else if (mode === 'remove') {
+                const ids = Array.isArray(payload) ? payload : [payload];
+                arr = arr.filter(x => !(x && ids.indexOf(x.id) !== -1));
+            } else if (mode === 'deltaSaldo') {
+                arr = arr.map(x => (x && x.id === payload.id)
+                    ? Object.assign({}, x, { saldo: (Number(x.saldo) || 0) + payload.delta })
+                    : x);
+            } else if (mode === 'deltaStok') {
+                const daftar = Array.isArray(payload) ? payload : [payload];
+                arr = arr.map(x => {
+                    const d = daftar.find(m => x && m.kode === x.kode);
+                    return d ? Object.assign({}, x, { stok: Math.max(0, (Number(x.stok) || 0) + d.delta) }) : x;
+                });
+            }
+            return arr;
+        }, (err, committed, snap) => {
+            if (!err && committed && snap && snap.val() !== null) {
+                terapkanHasil(key, snap.val());
+            }
+            if (err && !noEnqueue) antreOperasi(key, mode, payload);
+            if (cb) cb(err, committed, snap);
+        });
+    }
 
     // Log transaksi aman (append-only): tidak bisa tertimpa antar perangkat.
     function tulisTransaksi(rec) {
@@ -1200,27 +1316,20 @@
         } catch (e) { return null; }
     }
 
-    // Update saldo secara atomik per-santri: server menghitung saldo baru dari
-    // nilai terkini, sehingga tidak bisa ditimpa data lama dari perangkat lain.
+    // Update saldo secara atomik per-santri (berdasarkan id, bukan indeks array)
+    // sehingga aman walau banyak perangkat menulis bersamaan dan daftar santri berubah.
     function updateSaldoServer(santri, delta, refRec) {
         if (!santri || !window.__fbReady) return;
-        const idx = santriList.findIndex(s => s.id === santri.id);
-        if (idx === -1) return;
-        try {
-            const ref = firebase.database().ref('barokah/santri/' + idx + '/saldo');
-            ref.transaction(cur => {
-                const base = (typeof cur === 'number' && !isNaN(cur)) ? cur : 0;
-                return base + delta;
-            }).then(res => {
-                const nuevo = res && res.snapshot && res.snapshot.val();
-                if (typeof nuevo === 'number' && !isNaN(nuevo)) {
-                    santri.saldo = nuevo;
-                    __cache['santri'] = santriList;
-                    try { localStorage.setItem('barokah_santri', JSON.stringify(santriList)); } catch {}
-                    if (refRec) refRec.update({ saldo: nuevo }).catch(() => {});
+        ubahServer('santri', 'deltaSaldo', { id: santri.id, delta: delta }, (err, committed, snap) => {
+            if (!err && committed && snap && snap.val()) {
+                const arr = snap.val();
+                const s = Array.isArray(arr) ? arr.find(x => x && x.id === santri.id) : null;
+                if (s) {
+                    santri.saldo = s.saldo;
+                    if (refRec) refRec.update({ saldo: s.saldo }).catch(() => {});
                 }
-            }).catch(() => {});
-        } catch (e) {}
+            }
+        });
     }
 
     // Default data
@@ -1249,10 +1358,14 @@
     let logTransaksiKasir = [];
 
     function saveAll() {
-        DB.set('produk', produkList);
-        DB.set('riwayat_tabungan', riwayatTabungan);
-        DB.set('riwayat_penjualan', riwayatPenjualan);
-        DB.set('pembayaran_wali', pembayaranWali);
+        // Produk ditulis terpisah (lihat prosesBayar/barang) supaya stok tidak
+        // tertimpa data basi dari perangkat lain.
+        simpanLokal('riwayat_tabungan');
+        simpanLokal('riwayat_penjualan');
+        simpanLokal('pembayaran_wali');
+        ubahServer('riwayat_tabungan', 'append', riwayatTabungan);
+        ubahServer('riwayat_penjualan', 'append', riwayatPenjualan);
+        ubahServer('pembayaran_wali', 'append', pembayaranWali);
     }
 
     // ======================== ONLINE SYNC (FIREBASE) ========================
@@ -1299,6 +1412,27 @@
         } catch {}
     }
     window.__fbReady = false;
+    window.__authReady = false;
+
+    // Seed data awal hanya boleh dijalankan setelah login Firebase Auth berhasil,
+    // karena aturan keamanan server mewajibkan penulis yang sudah login.
+    function seedKosong() {
+        if (!window.__fbReady || !window.__authReady || window.__firstSyncDone) return;
+        const splash = document.getElementById('splashOnline');
+        const initial = { produk: produkList, santri: santriList, riwayat_tabungan: riwayatTabungan, riwayat_penjualan: riwayatPenjualan, pembayaran_wali: pembayaranWali, identitas: identitas, admin_pass: adminPassword, admin_user: adminUsername };
+        firebase.database().ref('barokah').set(initial).then(() => {
+            window.__firstSyncDone = true;
+            setStatusOnline('Online', true);
+            splash.classList.add('hidden');
+            splash.classList.remove('flex');
+            refreshAllCurrent();
+        }).catch(() => {
+            setStatusOnline('Lokal', false);
+            splash.classList.add('hidden');
+            splash.classList.remove('flex');
+        });
+    }
+
     function initOnline() {
         const cfg = (window.FIREBASE_CONFIG || {});
         if (!cfg.apiKey || cfg.apiKey.indexOf('PASTE') !== -1) {
@@ -1315,23 +1449,32 @@
             const app = firebase.initializeApp(cfg);
             const db = firebase.database(app);
             window.__fbReady = true;
+            // Deteksi koneksi nyata ke Firebase (lebih andal daripada navigator.onLine).
+            firebase.database().ref('.info/connected').on('value', snap => {
+                window.__connected = snap.val() === true;
+                if (window.__connected && window.__authReady) flushAntrean();
+            });
+            // Status login Firebase Auth: sesi tersimpan otomatis, jadi tidak perlu
+            // login ulang setiap buka aplikasi. Tulis hanya aktif saat sudah login.
+            firebase.auth().onAuthStateChanged(user => {
+                window.__authReady = !!user;
+                const lock = document.getElementById('lockApp');
+                if (user) {
+                    lock.classList.add('hidden');
+                    lock.classList.remove('flex');
+                    seedKosong();
+                    flushAntrean();
+                } else {
+                    lock.classList.remove('hidden');
+                    lock.classList.add('flex');
+                    document.getElementById('lockPesan').classList.add('hidden');
+                }
+            });
             firebase.database().ref('barokah').on('value', snap => {
                 const data = snap.val() || {};
                 const isEmpty = Object.keys(data).length === 0;
                 if (isEmpty && !window.__firstSyncDone) {
-                    // Belum ada data di server: seeding data lokal sebagai sumber awal
-                    const initial = { produk: produkList, santri: santriList, riwayat_tabungan: riwayatTabungan, riwayat_penjualan: riwayatPenjualan, pembayaran_wali: pembayaranWali, identitas: identitas, admin_pass: adminPassword, admin_user: adminUsername };
-                    firebase.database().ref('barokah').set(initial).then(() => {
-                        window.__firstSyncDone = true;
-                        setStatusOnline('Online', true);
-                        splash.classList.add('hidden');
-                        splash.classList.remove('flex');
-                        refreshAllCurrent();
-                    }).catch(() => {
-                        setStatusOnline('Lokal', false);
-                        splash.classList.add('hidden');
-                        splash.classList.remove('flex');
-                    });
+                    seedKosong();
                     return;
                 }
                 applySnapshot(data);
@@ -1340,7 +1483,9 @@
                 splash.classList.add('hidden');
                 splash.classList.remove('flex');
                 refreshAllCurrent();
+                flushAntrean();
             }, err => {
+                window.__connected = false;
                 setStatusOnline('Lokal', false);
                 splash.classList.add('hidden');
                 splash.classList.remove('flex');
@@ -1859,11 +2004,19 @@
             updateSaldoServer(santri, -total, refRecBelanja);
         }
 
-        // Kurangi stok
+        // Kurangi stok (ditulis atomik ke server agar tidak tertimpa transaksi lain)
+        const deltaStok = [];
         keranjang.forEach(k => {
             const p = produkList.find(x => x.kode === k.kode);
-            if (p) p.stok -= k.jumlah;
+            if (p) {
+                p.stok -= k.jumlah;
+                deltaStok.push({ kode: k.kode, delta: -k.jumlah });
+            }
         });
+        if (deltaStok.length > 0) {
+            simpanLokal('produk');
+            ubahServer('produk', 'deltaStok', deltaStok);
+        }
 
         // Simpan riwayat penjualan
         const transaksi = {
@@ -2190,8 +2343,10 @@
         }
         if (hapusBtn) {
             if (confirm('Hapus santri ini?')) {
-                santriList = santriList.filter(x => x.id !== parseInt(hapusBtn.dataset.id));
-                DB.set('santri', santriList);
+                const idHapus = parseInt(hapusBtn.dataset.id);
+                santriList = santriList.filter(x => x.id !== idHapus);
+                simpanLokal('santri');
+                ubahServer('santri', 'remove', [idHapus]);
                 refreshDaftarSantri();
                 refreshSelectSantri();
                 showToast('Santri dihapus', 'fa-trash', 'text-red-400');
@@ -2230,14 +2385,16 @@
             showToast('NIS sudah digunakan!', 'fa-exclamation-triangle', 'text-yellow-400'); return;
         }
 
+        let dataSantri = null;
         if (editId) {
-            const s = santriList.find(x => x.id === parseInt(editId));
-            if (s) { s.nis = nis; s.nama = nama; s.kelas = kelas; s.orangTua = ortu; s.hp = hp; }
+            dataSantri = santriList.find(x => x.id === parseInt(editId));
+            if (dataSantri) { dataSantri.nis = nis; dataSantri.nama = nama; dataSantri.kelas = kelas; dataSantri.orangTua = ortu; dataSantri.hp = hp; }
         } else {
-            const newId = santriList.length > 0 ? Math.max(...santriList.map(s => s.id)) + 1 : 1;
-            santriList.push({ id: newId, nis, nama, kelas, orangTua: ortu, hp, saldo: 0 });
+            dataSantri = { id: Date.now(), nis, nama, kelas, orangTua: ortu, hp, saldo: 0 };
+            santriList.push(dataSantri);
         }
-        DB.set('santri', santriList);
+        simpanLokal('santri');
+        if (dataSantri) ubahServer('santri', 'append', [dataSantri]);
         document.getElementById('modalSantri').classList.add('hidden');
         document.getElementById('modalSantri').classList.remove('flex');
         refreshDaftarSantri();
@@ -2511,9 +2668,10 @@
     const fotoFounderImg = new Image();
     fotoFounderImg.src = FOTO_FOUNDER;
 
+    // Badge founder versi kecil di pojok kanan atas kartu (tidak mengganggu QR/barcode).
     function gambarBadgeFounder(ctx, cx, cy) {
-        const r = 22;
-        const fcx = cx - 88, fcy = cy;
+        const r = 13;
+        const fcx = cx - 74, fcy = cy;
         if (fotoFounderImg.complete && fotoFounderImg.naturalWidth > 0) {
             ctx.save();
             ctx.beginPath();
@@ -2528,7 +2686,7 @@
             ctx.fillStyle = '#1E9E6A';
             ctx.fill();
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            ctx.font = 'bold 14px "Segoe UI", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('K', fcx, fcy + 1);
@@ -2536,16 +2694,44 @@
         }
         ctx.beginPath();
         ctx.arc(fcx, fcy, r, 0, Math.PI * 2);
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = '#C9A227';
         ctx.stroke();
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#06392A';
-        ctx.font = 'bold 17px "Segoe UI", sans-serif';
-        ctx.fillText('Kangmisbah', cx, cy + 2);
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '11px "Segoe UI", sans-serif';
-        ctx.fillText('Founder & Developer', cx, cy + 20);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.fillText('Kangmisbah', fcx - r - 8, cy - 1);
+        ctx.fillStyle = 'rgba(232,194,92,0.9)';
+        ctx.font = '8px "Segoe UI", sans-serif';
+        ctx.fillText('Founder & Developer', fcx - r - 8, cy + 10);
+        ctx.textAlign = 'left';
+    }
+
+    // Potong teks dengan elipsis agar tidak keluar dari area kartu.
+    function potongTeks(ctx, text, maxW) {
+        let t = String(text);
+        if (ctx.measureText(t).width <= maxW) return t;
+        while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+        return t + '…';
+    }
+
+    // Bungkus teks menjadi beberapa baris agar nilai panjang tidak menutupi QR.
+    function bungkusTeks(ctx, text, maxW) {
+        const kata = String(text).split(' ');
+        const baris = [];
+        let cur = '';
+        kata.forEach(w => {
+            const coba = cur ? cur + ' ' + w : w;
+            if (ctx.measureText(coba).width <= maxW) {
+                cur = coba;
+            } else {
+                if (cur) baris.push(cur);
+                cur = w;
+                while (ctx.measureText(cur).width > maxW && cur.length > 1) cur = cur.slice(0, -1);
+            }
+        });
+        if (cur) baris.push(cur);
+        return baris;
     }
 
     function pasangWatermark() {
@@ -2598,7 +2784,7 @@
         ctx.textAlign = 'center';
         ctx.fillStyle = '#06392A';
         ctx.font = 'bold 27px "Segoe UI", sans-serif';
-        ctx.fillText(s.nama, 320, 148);
+        ctx.fillText(potongTeks(ctx, s.nama, 520), 320, 148);
         ctx.fillStyle = '#3F3A2E';
         ctx.font = '19px "Segoe UI", sans-serif';
         ctx.fillText('NIS: ' + s.nis + ' | Kelas: ' + (s.kelas || '-'), 320, 180);
@@ -2632,7 +2818,7 @@
         ctx.font = 'bold 15px "Segoe UI", sans-serif';
         ctx.fillText('SCAN UNTUK BELANJA', 320, qy + qsize + 16);
 
-        gambarBadgeFounder(ctx, 320, 376);
+        gambarBadgeFounder(ctx, W - 45, 45);
 
         ctx.textAlign = 'left';
 
@@ -2668,7 +2854,7 @@
         ctx.font = 'bold 31px "Segoe UI", sans-serif';
         ctx.fillText('DATA SANTRI', 40, 82);
 
-        // Data santri (kolom kiri)
+        // Data santri (kolom kiri) — nilai dibungkus agar tidak menutupi QR kanan
         ctx.textAlign = 'left';
         const baris = [
             ['Nama', s.nama],
@@ -2676,26 +2862,27 @@
             ['Kelas', s.kelas || '-'],
             ['Wali / Orang Tua', s.orangTua || '-']
         ];
-        let y = 166;
+        let y = 140;
         baris.forEach(([lbl, val]) => {
             ctx.fillStyle = '#8A7A5C';
-            ctx.font = '16px "Segoe UI", sans-serif';
+            ctx.font = '15px "Segoe UI", sans-serif';
             ctx.fillText(lbl.toUpperCase(), 40, y);
             ctx.fillStyle = '#06392A';
-            ctx.font = 'bold 21px "Segoe UI", sans-serif';
-            ctx.fillText(String(val), 170, y + 2);
+            ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            const lines = bungkusTeks(ctx, String(val), 356).slice(0, 2);
+            lines.forEach((ln, i) => ctx.fillText(potongTeks(ctx, ln, 356), 40, y + 26 + i * 24));
             ctx.strokeStyle = '#E7D8B6';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(40, y + 12);
-            ctx.lineTo(360, y + 12);
+            ctx.moveTo(40, y + 52);
+            ctx.lineTo(400, y + 52);
             ctx.stroke();
-            y += 50;
+            y += 56;
         });
 
         // QR link aplikasi wali (kolom kanan)
         const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
-        const qx = 412, qy = 132, qsize = 180;
+        const qx = 420, qy = 132, qsize = 176;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -2733,7 +2920,7 @@
         ctx.moveTo(40, 372);
         ctx.lineTo(600, 372);
         ctx.stroke();
-        gambarBadgeFounder(ctx, 320, 348);
+        gambarBadgeFounder(ctx, W - 45, 45);
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '13px "Segoe UI", sans-serif';
         const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
@@ -3280,8 +3467,10 @@
         }
         if (hapusBtn) {
             if (confirm('Hapus barang ini?')) {
-                produkList = produkList.filter(x => x.id !== parseInt(hapusBtn.dataset.id));
-                saveAll();
+                const idHapus = parseInt(hapusBtn.dataset.id);
+                produkList = produkList.filter(x => x.id !== idHapus);
+                simpanLokal('produk');
+                ubahServer('produk', 'remove', [idHapus]);
                 renderTabelBarang();
                 renderProduk();
                 showToast('Barang dihapus', 'fa-trash', 'text-red-400');
@@ -3303,14 +3492,16 @@
             showToast('Kode barang sudah digunakan!', 'fa-exclamation-triangle', 'text-yellow-400'); return;
         }
 
+        let dataBarang = null;
         if (editId) {
-            const p = produkList.find(x => x.id === parseInt(editId));
-            if (p) { p.kode = kode; p.nama = nama; p.harga = harga; p.stok = stok; p.emoji = emoji; p.halal = halal; }
+            dataBarang = produkList.find(x => x.id === parseInt(editId));
+            if (dataBarang) { dataBarang.kode = kode; dataBarang.nama = nama; dataBarang.harga = harga; dataBarang.stok = stok; dataBarang.emoji = emoji; dataBarang.halal = halal; }
         } else {
-            const newId = produkList.length > 0 ? Math.max(...produkList.map(p => p.id)) + 1 : 1;
-            produkList.push({ id: newId, kode, nama, harga, stok: stok || 0, emoji, halal });
+            dataBarang = { id: Date.now(), kode, nama, harga, stok: stok || 0, emoji, halal };
+            produkList.push(dataBarang);
         }
-        saveAll();
+        simpanLokal('produk');
+        if (dataBarang) ubahServer('produk', 'append', [dataBarang]);
         document.getElementById('modalBarang').classList.add('hidden');
         document.getElementById('modalBarang').classList.remove('flex');
         renderTabelBarang();
@@ -3555,26 +3746,52 @@
         const baru = document.getElementById('setPassBaru').value;
         const konfirm = document.getElementById('setPassKonfirm').value;
         const userBaru = document.getElementById('setUsername').value.trim();
-        if (lama !== adminPassword) { showToast('Password lama salah!', 'fa-times-circle', 'text-red-400'); return; }
-        let adaPerubahan = false;
-        if (userBaru && userBaru !== adminUsername) {
-            adminUsername = userBaru;
-            DB.set('admin_user', adminUsername);
-            adaPerubahan = true;
+
+        // Mode offline: ubah username/password lokal.
+        if (!window.__fbReady) {
+            if (lama !== adminPassword) { showToast('Password lama salah!', 'fa-times-circle', 'text-red-400'); return; }
+            let adaPerubahan = false;
+            if (userBaru && userBaru !== adminUsername) {
+                adminUsername = userBaru;
+                DB.set('admin_user', adminUsername);
+                adaPerubahan = true;
+            }
+            if (baru) {
+                if (baru.length < 4) { showToast('Password baru minimal 4 karakter!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+                if (baru !== konfirm) { showToast('Konfirmasi password tidak cocok!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+                adminPassword = baru;
+                DB.set('admin_pass', adminPassword);
+                adaPerubahan = true;
+            }
+            if (!adaPerubahan) { showToast('Tidak ada perubahan!', 'fa-info-circle', 'text-stone-400'); return; }
+            showToast('Akun admin diperbarui!');
+            document.getElementById('setPassLama').value = '';
+            document.getElementById('setPassBaru').value = '';
+            document.getElementById('setPassKonfirm').value = '';
+            return;
         }
-        if (baru) {
-            if (baru.length < 4) { showToast('Password baru minimal 4 karakter!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-            if (baru !== konfirm) { showToast('Konfirmasi password tidak cocok!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-            adminPassword = baru;
-            DB.set('admin_pass', adminPassword);
-            adaPerubahan = true;
-        }
-        if (!adaPerubahan) { showToast('Tidak ada perubahan!', 'fa-info-circle', 'text-stone-400'); return; }
-        showToast('Akun admin diperbarui!');
-        document.getElementById('setPassLama').value = '';
-        document.getElementById('setPassBaru').value = '';
-        document.getElementById('setPassKonfirm').value = '';
-        document.getElementById('setUsername').value = '';
+
+        // Mode online: ubah kata sandi lewat Firebase Authentication.
+        const user = firebase.auth().currentUser;
+        if (!user) { showToast('Sesi belum masuk!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+        if (userBaru) { showToast('Email/username diubah lewat Firebase Console.', 'fa-info-circle', 'text-blue-400'); }
+        if (!baru) { showToast('Isi kata sandi baru yang diinginkan!', 'fa-info-circle', 'text-stone-400'); return; }
+        if (baru.length < 6) { showToast('Kata sandi baru minimal 6 karakter!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+        if (baru !== konfirm) { showToast('Konfirmasi kata sandi tidak cocok!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+        const btn = document.getElementById('btnUbahPass');
+        btn.disabled = true;
+        firebase.auth().signInWithEmailAndPassword(user.email || '', lama).then(() => {
+            return firebase.auth().currentUser.updatePassword(baru);
+        }).then(() => {
+            btn.disabled = false;
+            showToast('Kata sandi berhasil diperbarui!');
+            document.getElementById('setPassLama').value = '';
+            document.getElementById('setPassBaru').value = '';
+            document.getElementById('setPassKonfirm').value = '';
+        }).catch(err => {
+            btn.disabled = false;
+            showToast(pesanErrorAuth(err), 'fa-times-circle', 'text-red-400');
+        });
     });
 
     // Backup
@@ -3626,6 +3843,9 @@
         const lock = document.getElementById('lockApp');
         lock.classList.remove('hidden');
         lock.classList.add('flex');
+        if (window.__fbReady && firebase.auth) {
+            firebase.auth().signOut().catch(() => {});
+        }
         showToast('Terima kasih! Barakallah.', 'fa-sign-out-alt', 'text-blue-400');
         setTimeout(() => document.getElementById('lockUsername').focus(), 100);
     });
@@ -3636,30 +3856,54 @@
     // ======================== KUNCI MASUK APLIKASI ========================
     function bukaLock() {
         document.getElementById('lockApp').classList.add('hidden');
+        document.getElementById('lockApp').classList.remove('flex');
+    }
+    function tampilPesanLock(teks) {
+        const el = document.getElementById('lockPesan');
+        el.textContent = teks;
+        el.classList.remove('hidden');
+    }
+    function pesanErrorAuth(err) {
+        const kode = (err && err.code) || '';
+        if (kode.indexOf('user-not-found') !== -1 || kode.indexOf('wrong-password') !== -1 || kode.indexOf('invalid-credential') !== -1 || kode.indexOf('invalid-email') !== -1) return 'Email atau password salah!';
+        if (kode.indexOf('network') !== -1) return 'Gagal terhubung internet. Periksa koneksi lalu coba lagi.';
+        if (kode.indexOf('too-many') !== -1) return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+        return (err && err.message) || 'Gagal masuk. Coba lagi.';
     }
     function verifLock() {
         const u = document.getElementById('lockUsername').value.trim();
         const p = document.getElementById('lockPassword').value;
-        if (u === adminUsername && p === adminPassword) {
-            try { localStorage.setItem('barokah_lock', JSON.stringify(Date.now())); } catch {}
-            bukaLock();
+        if (!u || !p) { tampilPesanLock('Email dan password wajib diisi!'); return; }
+        // Mode offline (tanpa Firebase): pakai username/password lokal.
+        if (!window.__fbReady) {
+            if (u === adminUsername && p === adminPassword) {
+                bukaLock();
+                document.getElementById('lockUsername').value = '';
+                document.getElementById('lockPassword').value = '';
+            } else {
+                tampilPesanLock('Username atau password salah!');
+            }
+            return;
+        }
+        // Mode online: verifikasi lewat Firebase Authentication.
+        const btn = document.getElementById('btnLockMasuk');
+        btn.disabled = true;
+        btn.textContent = 'Masuk...';
+        document.getElementById('lockPesan').classList.add('hidden');
+        firebase.auth().signInWithEmailAndPassword(u, p).then(() => {
+            btn.disabled = false;
+            btn.textContent = 'Masuk';
             document.getElementById('lockUsername').value = '';
             document.getElementById('lockPassword').value = '';
-        } else {
-            const el = document.getElementById('lockPesan');
-            el.textContent = 'Username atau password salah!';
-            el.classList.remove('hidden');
-        }
+        }).catch(err => {
+            btn.disabled = false;
+            btn.textContent = 'Masuk';
+            tampilPesanLock(pesanErrorAuth(err));
+        });
     }
     document.getElementById('btnLockMasuk').addEventListener('click', verifLock);
     document.getElementById('lockPassword').addEventListener('keydown', e => { if (e.key === 'Enter') verifLock(); });
-    (function() {
-        try {
-            const t = JSON.parse(localStorage.getItem('barokah_lock'));
-            if (t && (Date.now() - t) < 7 * 24 * 3600 * 1000) { bukaLock(); return; }
-        } catch {}
-        setTimeout(() => document.getElementById('lockUsername').focus(), 100);
-    })();
+    setTimeout(() => document.getElementById('lockUsername').focus(), 100);
 
     // ======================== SISTEM LISENSI APLIKASI ========================
     const MASA_TRIAL = 14;
