@@ -2402,14 +2402,15 @@
         // Nama & NIS di atas QR
         ctx.textAlign = 'center';
         ctx.fillStyle = '#06392A';
-        ctx.font = 'bold 28px "Segoe UI", sans-serif';
-        ctx.fillText(s.nama, 320, 160);
+        ctx.font = 'bold 27px "Segoe UI", sans-serif';
+        ctx.fillText(s.nama, 320, 148);
         ctx.fillStyle = '#3F3A2E';
-        ctx.font = '20px "Segoe UI", sans-serif';
-        ctx.fillText('NIS: ' + s.nis + ' | Kelas: ' + (s.kelas || '-'), 320, 192);
+        ctx.font = '19px "Segoe UI", sans-serif';
+        ctx.fillText('NIS: ' + s.nis + ' | Kelas: ' + (s.kelas || '-'), 320, 180);
 
-        // Kotak barcode (QR) besar
-        const qx = 320 - 130, qy = 202, qsize = 260;
+        // Kotak barcode (QR) besar di tengah
+        const qsize = 150;
+        const qx = (W - qsize) / 2, qy = 194;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -2436,17 +2437,6 @@
         ctx.font = 'bold 15px "Segoe UI", sans-serif';
         ctx.fillText('SCAN UNTUK BELANJA', 320, qy + qsize + 30);
 
-        // Kaki kartu
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(40, 362);
-        ctx.lineTo(600, 362);
-        ctx.stroke();
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '13px "Segoe UI", sans-serif';
-        const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(alamat || identitas.namaApp, 320, 388);
         ctx.textAlign = 'left';
 
         return cv;
@@ -2489,7 +2479,7 @@
             ['Kelas', s.kelas || '-'],
             ['Wali / Orang Tua', s.orangTua || '-']
         ];
-        let y = 172;
+        let y = 166;
         baris.forEach(([lbl, val]) => {
             ctx.fillStyle = '#8A7A5C';
             ctx.font = '16px "Segoe UI", sans-serif';
@@ -2503,12 +2493,12 @@
             ctx.moveTo(40, y + 12);
             ctx.lineTo(360, y + 12);
             ctx.stroke();
-            y += 52;
+            y += 50;
         });
 
         // QR link aplikasi wali (kolom kanan)
         const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
-        const qx = 412, qy = 138, qsize = 186;
+        const qx = 412, qy = 132, qsize = 180;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -2534,22 +2524,22 @@
         ctx.fillStyle = '#A8871F';
         ctx.font = 'bold 14px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('APLIKASI WALI', qx + qsize / 2, qy + qsize + 28);
+        ctx.fillText('APLIKASI WALI', qx + qsize / 2, qy + qsize + 26);
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '11px "Segoe UI", sans-serif';
-        ctx.fillText('Scan QR untuk memantau saldo ananda', qx + qsize / 2, qy + qsize + 47);
+        ctx.fillText('Scan QR untuk memantau saldo ananda', qx + qsize / 2, qy + qsize + 45);
 
         // Kaki kartu
         ctx.strokeStyle = '#E7D8B6';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(40, 362);
-        ctx.lineTo(600, 362);
+        ctx.moveTo(40, 372);
+        ctx.lineTo(600, 372);
         ctx.stroke();
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '13px "Segoe UI", sans-serif';
         const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(alamat || identitas.namaApp, 320, 388);
+        ctx.fillText(alamat || identitas.namaApp, 320, 392);
         ctx.textAlign = 'left';
 
         return cv;
