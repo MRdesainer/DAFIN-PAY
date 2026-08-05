@@ -267,16 +267,29 @@
         });
     }
 
-    function renderRekening() {
-        const rk = {
+    function getDaftarRekening() {
+        if (Array.isArray(identitas.rekenings) && identitas.rekenings.length > 0) {
+            return identitas.rekenings;
+        }
+        return [{
             bank: identitas.bank || 'Bank Syariah Indonesia',
             noRek: identitas.noRek || '-',
             atasNama: identitas.atasNama || identitas.namaApp
-        };
+        }];
+    }
+
+    function renderRekening() {
+        const daftar = getDaftarRekening();
         $('infoRekening').innerHTML = `
-            <p><span class="text-stone-500 text-xs">Bank</span><br><span class="font-semibold">${rk.bank}</span></p>
-            <p><span class="text-stone-500 text-xs">No. Rekening</span><br><span class="font-bold text-primary">${rk.noRek}</span></p>
-            <p><span class="text-stone-500 text-xs">Atas Nama</span><br>${rk.atasNama}</p>
+            <p class="text-xs text-stone-500 mb-1">Silakan transfer ke salah satu rekening berikut:</p>
+            ${daftar.map((rk, i) => `
+                <div class="border-t border-pasirTua pt-2 mt-2">
+                    ${daftar.length > 1 ? `<p class="text-xs font-bold text-stone-500 mb-0.5">Rekening ${i + 1}</p>` : ''}
+                    <p><span class="text-stone-500 text-xs">Bank</span><br><span class="font-semibold">${rk.bank}</span></p>
+                    <p><span class="text-stone-500 text-xs">No. Rekening</span><br><span class="font-bold text-primary">${rk.noRek}</span></p>
+                    <p><span class="text-stone-500 text-xs">Atas Nama</span><br>${rk.atasNama}</p>
+                </div>
+            `).join('')}
         `;
     }
 

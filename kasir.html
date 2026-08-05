@@ -695,21 +695,12 @@
                             </div>
                         </div>
                         <div class="border-t border-pasirTua pt-3">
-                            <p class="text-sm font-semibold text-primary mb-2"><i class="fas fa-university mr-1"></i>Rekening Koperasi (untuk pembayaran wali)</p>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label class="text-sm text-stone-600 font-medium">Bank</label>
-                                    <input type="text" id="setBank" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="Bank Syariah Indonesia">
-                                </div>
-                                <div>
-                                    <label class="text-sm text-stone-600 font-medium">No. Rekening</label>
-                                    <input type="text" id="setNoRek" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="1234-5678-9012">
-                                </div>
-                                <div>
-                                    <label class="text-sm text-stone-600 font-medium">Atas Nama</label>
-                                    <input type="text" id="setAtasNama" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="Koperasi Dafin">
-                                </div>
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-sm font-semibold text-primary"><i class="fas fa-university mr-1"></i>Rekening Koperasi (untuk pembayaran wali)</p>
+                                <button type="button" id="btnTambahRekening" class="text-xs bg-primary text-white px-2.5 py-1.5 rounded-lg hover:opacity-90"><i class="fas fa-plus mr-1"></i>Tambah Rekening</button>
                             </div>
+                            <p class="text-[11px] text-stone-400 mb-2">Wali santri bisa memilih bank/rekening tujuan transfer.</p>
+                            <div id="daftarRekening" class="space-y-2"></div>
                         </div>
                         <div>
                             <label class="text-sm text-stone-600 font-medium">Link Aplikasi Wali</label>
@@ -3100,6 +3091,50 @@
         const hp = santri && santri.hp ? String(santri.hp) : '';
         return hp ? hp.replace(/^0/, '62') : '';
     }
+    function getDaftarRekening() {
+        if (Array.isArray(identitas.rekenings) && identitas.rekenings.length > 0) {
+            return identitas.rekenings;
+        }
+        return [rekeningInfo()];
+    }
+    function teksDaftarRekeningWA() {
+        const daftar = getDaftarRekening();
+        return daftar.map((r, i) => {
+            const pref = daftar.length > 1 ? (i + 1) + '. ' : '';
+            return pref + '🏦 Bank: ' + r.bank + '\n📱 No. Rekening: *' + r.noRek + '*\n👤 Atas Nama: ' + r.atasNama;
+        }).join('\n\n');
+    }
+    function buatBarisRekening(r) {
+        const row = document.createElement('div');
+        row.className = 'rekening-row grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-start';
+        row.innerHTML = `
+            <div><label class="text-xs text-stone-500 font-medium">Bank</label>
+                <input type="text" class="rk-bank w-full border rounded-lg py-2 px-3 text-sm mt-0.5 focus:ring-2 focus:ring-primary" placeholder="Bank Syariah Indonesia" value="${escTeks(r.bank || '')}"></div>
+            <div><label class="text-xs text-stone-500 font-medium">No. Rekening</label>
+                <input type="text" class="rk-norek w-full border rounded-lg py-2 px-3 text-sm mt-0.5 focus:ring-2 focus:ring-primary" placeholder="1234-5678-9012" value="${escTeks(r.noRek || '')}"></div>
+            <div><label class="text-xs text-stone-500 font-medium">Atas Nama</label>
+                <input type="text" class="rk-atasnama w-full border rounded-lg py-2 px-3 text-sm mt-0.5 focus:ring-2 focus:ring-primary" placeholder="Koperasi Dafin" value="${escTeks(r.atasNama || '')}"></div>
+            <button type="button" class="rk-hapus mt-5 w-8 h-8 flex items-center justify-center bg-red-100 text-red-500 rounded-lg hover:bg-red-200" title="Hapus rekening"><i class="fas fa-trash"></i></button>
+        `;
+        return row;
+    }
+    function tambahBarisRekening() {
+        document.getElementById('daftarRekening').appendChild(buatBarisRekening({}));
+    }
+    function renderEditorRekening() {
+        const cont = document.getElementById('daftarRekening');
+        cont.innerHTML = '';
+        getDaftarRekening().forEach(r => cont.appendChild(buatBarisRekening(r)));
+        if (!cont.children.length) tambahBarisRekening();
+    }
+    document.getElementById('btnTambahRekening').addEventListener('click', tambahBarisRekening);
+    document.getElementById('daftarRekening').addEventListener('click', e => {
+        const btn = e.target.closest('.rk-hapus');
+        if (!btn) return;
+        btn.closest('.rekening-row').remove();
+        const cont = document.getElementById('daftarRekening');
+        if (!cont.children.length) tambahBarisRekening();
+    });
     function rekeningInfo() {
         return {
             bank: identitas.bank || 'Bank Syariah Indonesia',
@@ -3112,19 +3147,21 @@
     }
 
     function renderRekeningInfo() {
-        const rk = rekeningInfo();
+        const daftar = getDaftarRekening();
         document.getElementById('infoRekening').innerHTML = `
             <p class="text-xs opacity-70">Rekening Koperasi</p>
-            <p class="font-bold">${rk.bank}</p>
-            <p class="text-secondary font-semibold">${rk.noRek}</p>
-            <p class="text-xs opacity-80">a.n. ${rk.atasNama}</p>
+            ${daftar.map((rk, i) => `
+                ${daftar.length > 1 ? `<p class="text-[11px] font-bold opacity-80 mt-1">Rekening ${i + 1}</p>` : ''}
+                <p class="font-bold">${rk.bank}</p>
+                <p class="text-secondary font-semibold">${rk.noRek}</p>
+                <p class="text-xs opacity-80">a.n. ${rk.atasNama}</p>
+            `).join('')}
         `;
     }
 
     function renderDaftarWaliBayar() {
         const cont = document.getElementById('daftarWaliBayar');
         cont.innerHTML = '';
-        const rk = rekeningInfo();
         santriList.forEach(s => {
             const hp = noWaOrtu(s);
             const row = document.createElement('div');
@@ -3276,8 +3313,7 @@
         if (!s) return;
         const hp = noWaOrtu(s);
         if (!hp) { showToast('Nomor HP orang tua tidak tersedia!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-        const rk = rekeningInfo();
-        const pesan = `*${identitas.namaApp.toUpperCase()}*\n${identitas.alamat || ''}\n\n*PEMBERITAHUAN PEMBAYARAN WALI*\n\nAssalamu'alaikum Wr. Wb., Ayah/Bunda dari *${s.nama}* (NIS: ${s.nis}, Kelas: ${s.kelas}).\n\nSaldo tabungan ananda saat ini: *${formatRp(s.saldo)}*.\nUntuk kebutuhan belanja di koperasi, silakan transfer ke:\n\n🏦 Bank: ${rk.bank}\n📱 No. Rekening: *${rk.noRek}*\n👤 Atas Nama: ${rk.atasNama}\n\nSetelah transfer, mohon kirim buktinya melalui WhatsApp ini agar segera kami konfirmasi dan saldo tabungan ananda langsung bertambah.\n\nBarakallahu fiikum.`;
+        const pesan = `*${identitas.namaApp.toUpperCase()}*\n${identitas.alamat || ''}\n\n*PEMBERITAHUAN PEMBAYARAN WALI*\n\nAssalamu'alaikum Wr. Wb., Ayah/Bunda dari *${s.nama}* (NIS: ${s.nis}, Kelas: ${s.kelas}).\n\nSaldo tabungan ananda saat ini: *${formatRp(s.saldo)}*.\nUntuk kebutuhan belanja di koperasi, silakan transfer ke salah satu rekening:\n\n${teksDaftarRekeningWA()}\n\nSetelah transfer, mohon kirim buktinya melalui WhatsApp ini agar segera kami konfirmasi dan saldo tabungan ananda langsung bertambah.\n\nBarakallahu fiikum.`;
         window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`, '_blank');
         showToast('Membuka WhatsApp untuk tagih wali...');
     });
@@ -3301,8 +3337,7 @@
     });
 
     document.getElementById('btnSalinRekening').addEventListener('click', () => {
-        const rk = rekeningInfo();
-        const teks = `${rk.bank} | ${rk.noRek} | a.n. ${rk.atasNama}`;
+        const teks = getDaftarRekening().map(r => `${r.bank} | ${r.noRek} | a.n. ${r.atasNama}`).join('\n');
         navigator.clipboard.writeText(teks).then(() => {
             showToast('Nomor rekening disalin!');
         }).catch(() => {
@@ -3317,8 +3352,7 @@
     });
 
     document.getElementById('btnInfoRekeningWA').addEventListener('click', () => {
-        const rk = rekeningInfo();
-        const pesan = `*REKENING KOPERASI - ${identitas.namaApp.toUpperCase()}*\n${identitas.alamat || ''}\n\nUntuk pembayaran / top-up tabungan santri dari jarak jauh, silakan transfer ke:\n\n🏦 Bank: ${rk.bank}\n📱 No. Rekening: *${rk.noRek}*\n👤 Atas Nama: ${rk.atasNama}\n\nSetelah transfer, kirim buktinya ke nomor ini agar segera kami konfirmasi.\n\nJazakumullahu khairan.`;
+        const pesan = `*REKENING KOPERASI - ${identitas.namaApp.toUpperCase()}*\n${identitas.alamat || ''}\n\nUntuk pembayaran / top-up tabungan santri dari jarak jauh, silakan transfer ke salah satu rekening:\n\n${teksDaftarRekeningWA()}\n\nSetelah transfer, kirim buktinya ke nomor ini agar segera kami konfirmasi.\n\nJazakumullahu khairan.`;
         const hp = noWaOrtu(santriList[0]);
         window.open(`https://wa.me/${hp || ''}?text=${encodeURIComponent(pesan)}`, '_blank');
     });
@@ -3629,9 +3663,7 @@
             document.getElementById('setAlamat').value = identitas.alamat;
             document.getElementById('setTelepon').value = identitas.telepon;
             document.getElementById('setKota').value = identitas.kota;
-            document.getElementById('setBank').value = identitas.bank || '';
-            document.getElementById('setNoRek').value = identitas.noRek || '';
-            document.getElementById('setAtasNama').value = identitas.atasNama || '';
+            renderEditorRekening();
             document.getElementById('setLinkWali').value = identitas.linkWali || '';
             document.getElementById('setUsername').value = '';
             const sc = sholatConf();
@@ -3700,9 +3732,19 @@
         identitas.alamat = document.getElementById('setAlamat').value.trim();
         identitas.telepon = document.getElementById('setTelepon').value.trim();
         identitas.kota = document.getElementById('setKota').value.trim();
-        identitas.bank = document.getElementById('setBank').value.trim();
-        identitas.noRek = document.getElementById('setNoRek').value.trim();
-        identitas.atasNama = document.getElementById('setAtasNama').value.trim();
+        const rekenings = [];
+        document.querySelectorAll('#daftarRekening .rekening-row').forEach(row => {
+            const bank = row.querySelector('.rk-bank').value.trim();
+            const noRek = row.querySelector('.rk-norek').value.trim();
+            const atasNama = row.querySelector('.rk-atasnama').value.trim();
+            if (bank || noRek || atasNama) rekenings.push({ bank, noRek, atasNama });
+        });
+        if (rekenings.length) {
+            identitas.rekenings = rekenings;
+            identitas.bank = rekenings[0].bank;
+            identitas.noRek = rekenings[0].noRek;
+            identitas.atasNama = rekenings[0].atasNama;
+        }
         identitas.linkWali = document.getElementById('setLinkWali').value.trim();
         DB.set('identitas', identitas);
         terapkanIdentitas();
