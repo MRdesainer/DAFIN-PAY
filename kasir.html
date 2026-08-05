@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="titleApp">Kasir Barokah - Aplikasi Kasir</title>
+    <title id="titleApp">DAFIN-PAY - Aplikasi Kasir</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -85,7 +85,7 @@
                 <button id="tutupModalLisensi" class="text-stone-500 hover:text-stone-800 text-xl"><i class="fas fa-times"></i></button>
             </div>
             <p class="text-xs text-stone-500 mb-3">Masukkan kunci lisensi resmi yang Anda terima untuk membuka aplikasi.</p>
-            <input id="inputKunciLisensi" type="text" placeholder="BAROKAH-XXXX-XXXX-XXXX-XXXX" class="w-full border rounded-lg py-2 px-3 text-sm text-center mb-2 tracking-wider focus:ring-2 focus:ring-primary">
+            <input id="inputKunciLisensi" type="text" placeholder="DAFINPAY-XXXX-XXXX-XXXX" class="w-full border rounded-lg py-2 px-3 text-sm text-center mb-2 tracking-wider focus:ring-2 focus:ring-primary">
             <p id="pesanLisensi" class="text-xs text-red-500 mb-2 hidden"></p>
             <button id="btnSimpanLisensi" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold">
                 <i class="fas fa-key mr-1"></i> Aktivasi
@@ -134,7 +134,7 @@
             <div class="flex items-center gap-2">
                 <img id="logoAplikasi" src="" alt="Logo" class="w-9 h-9 rounded-lg hidden object-cover ring-1 ring-secondary">
                 <i id="iconDefault" class="fas fa-mosque text-2xl text-secondary"></i>
-                <h1 id="judulAplikasi" class="text-xl md:text-2xl font-bold teks-emas">KASIR BAROKAH</h1>
+                <h1 id="judulAplikasi" class="text-xl md:text-2xl font-bold teks-emas">DAFIN-PAY</h1>
             </div>
             <div class="flex items-center gap-3">
                 <span id="chipSholat" class="hidden sm:inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-white/15 ring-1 ring-white/30 cursor-pointer hover:bg-white/25 transition" title="Lihat jadwal sholat">
@@ -659,7 +659,7 @@
                     <div class="space-y-3">
                         <div>
                             <label class="text-sm text-stone-600 font-medium">Nama Aplikasi / Toko</label>
-                            <input type="text" id="setNamaApp" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="Kasir Barokah">
+                            <input type="text" id="setNamaApp" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="DAFIN-PAY">
                         </div>
                         <div>
                             <label class="text-sm text-stone-600 font-medium">Logo Aplikasi</label>
@@ -707,7 +707,7 @@
                                 </div>
                                 <div>
                                     <label class="text-sm text-stone-600 font-medium">Atas Nama</label>
-                                    <input type="text" id="setAtasNama" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="Koperasi Barokah">
+                                    <input type="text" id="setAtasNama" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="Koperasi Dafin">
                                 </div>
                             </div>
                         </div>
@@ -2775,7 +2775,7 @@
         // Teks kepala kartu
         ctx.fillStyle = '#E8C25C';
         ctx.font = 'bold 20px "Segoe UI", sans-serif';
-        ctx.fillText((identitas.namaApp || 'KASIR BAROKAH').toUpperCase(), 40, 44);
+        ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), 40, 44);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 31px "Segoe UI", sans-serif';
         ctx.fillText('KARTU TANDA SANTRI', 40, 82);
@@ -2849,7 +2849,7 @@
 
         ctx.fillStyle = '#E8C25C';
         ctx.font = 'bold 20px "Segoe UI", sans-serif';
-        ctx.fillText((identitas.namaApp || 'KASIR BAROKAH').toUpperCase(), 40, 44);
+        ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), 40, 44);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 31px "Segoe UI", sans-serif';
         ctx.fillText('DATA SANTRI', 40, 82);
@@ -3582,9 +3582,9 @@
     let adminUsername = DB.get('admin_user', 'admin');
     let adminPassword = DB.get('admin_pass', 'admin123');
     let identitas = DB.get('identitas', {
-        namaApp: 'KASIR BAROKAH', alamat: 'Jl. Masjid Al-Barokah No. 1',
+        namaApp: 'DAFIN-PAY', alamat: 'Jl. Raya Dafin No. 1',
         telepon: '0812-3456-7890', kota: '', logo: '',
-        bank: 'Bank Syariah Indonesia', noRek: '1234-5678-9012', atasNama: 'Koperasi Barokah',
+        bank: 'Bank Syariah Indonesia', noRek: '1234-5678-9012', atasNama: 'Koperasi Dafin',
         linkWali: '',
         sholat: {
             aktif: true, suara: true, overlay: true, audioUrl: '',
@@ -3687,7 +3687,7 @@
 
     // Simpan identitas
     document.getElementById('btnSimpanIdentitas').addEventListener('click', () => {
-        identitas.namaApp = document.getElementById('setNamaApp').value.trim() || 'KASIR BAROKAH';
+        identitas.namaApp = document.getElementById('setNamaApp').value.trim() || 'DAFIN-PAY';
         identitas.alamat = document.getElementById('setAlamat').value.trim();
         identitas.telepon = document.getElementById('setTelepon').value.trim();
         identitas.kota = document.getElementById('setKota').value.trim();
@@ -3915,7 +3915,7 @@
     }
     function decodeLisensi(kunci) {
         try {
-            const m = /^BAROKAH-([A-Za-z0-9_-]+)-([A-Z0-9]{8})$/.exec(String(kunci).trim().replace(/\s+/g, ''));
+            const m = /^DAFINPAY-([A-Za-z0-9_-]+)-([A-Z0-9]{8})$/.exec(String(kunci).trim().replace(/\s+/g, ''));
             if (!m) return null;
             let s = m[1].replace(/-/g, '+').replace(/_/g, '/');
             while (s.length % 4) s += '=';

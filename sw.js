@@ -1,7 +1,7 @@
-// Service Worker - Kasir & Tabungan Barokah
+// Service Worker - DAFIN-PAY
 // Ganti "CACHE" versi di bawah ini setiap kali Anda memperbarui app
 // agar pengguna mendapat versi baru (cache ikut ter-refresh).
-const CACHE = 'barokah-v24';
+const CACHE = 'dafinpay-v25';
 
 const PRECACHE = [
     './index.html',

@@ -1,4 +1,4 @@
-# Materi Penjualan — Aplikasi Kasir & Tabungan Santri (KASIR BAROKAH)
+# Materi Penjualan — Aplikasi Kasir & Tabungan Santri (DAFIN-PAY)
 
 Dokumen ini untuk **menawarkan aplikasi ke pembeli** (koperasi/pondok/sekolah/toko) dan sebagai
 **lampiran serah terima**. Versi teknis setup ada di [`SETUP.md`](SETUP.md) dan [`README.md`](README.md).
@@ -39,7 +39,7 @@ Dua aplikasi dalam satu paket:
 
 ## Paket lisensi (per toko)
 
-Setiap toko mendapat **kunci lisensi sendiri** (`BAROKAH-…`). Satu kunci untuk satu toko — tidak bisa
+Setiap toko mendapat **kunci lisensi sendiri** (`DAFINPAY-…`). Satu kunci untuk satu toko — tidak bisa
 dipakai toko lain. Pilihan masa berlaku:
 
 - **Selamanya** — sekali bayar, aktivasi permanen.

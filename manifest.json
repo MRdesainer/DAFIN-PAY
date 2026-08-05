@@ -1,6 +1,6 @@
 {
-    "name": "Kasir & Tabungan Barokah",
-    "short_name": "Kasir Barokah",
+    "name": "DAFIN-PAY - Kasir & Tabungan Santri",
+    "short_name": "DAFIN-PAY",
     "description": "Koperasi santri: kasir, tabungan, dan pembayaran wali terintegrasi.",
     "start_url": "./index.html",
     "scope": "./",

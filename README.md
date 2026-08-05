@@ -33,7 +33,7 @@ Aplikasi ini bisa **dipasang di HP Android** (ada ikon, layar penuh) dan bisa di
 ## Langkah 1: Buat Proyek Firebase (gratis)
 1. Buka https://console.firebase.google.com -> **Tambah proyek** -> ikuti langkah (boleh nonaktifkan Google Analytics).
 2. Dari halaman proyek: klik ikon **</> (Web)** untuk menambah aplikasi web.
-3. Beri nama (misal "Kasir Barokah"), centang "Juga siapkan Firebase Hosting" (opsional), klik **Daftarkan aplikasi**.
+3. Beri nama (misal "DAFIN-PAY"), centang "Juga siapkan Firebase Hosting" (opsional), klik **Daftarkan aplikasi**.
 4. Anda akan melihat **config** (apiKey, authDomain, databaseURL, dll). **Salin** nilai-nilainya.
 
 ## Langkah 2: Aktifkan Realtime Database + Authentication
@@ -50,10 +50,10 @@ Buka `online/config.js`, ganti nilai `PASTE_*` dengan milik Anda, contoh:
 ```js
 window.FIREBASE_CONFIG = {
     apiKey: "AIzaSyABC123...",
-    authDomain: "kasir-barokah.firebaseapp.com",
-    databaseURL: "https://kasir-barokah-default-rtdb.firebaseio.com",
-    projectId: "kasir-barokah",
-    storageBucket: "kasir-barokah.appspot.com",
+    authDomain: "dafin-pay.firebaseapp.com",
+    databaseURL: "https://dafin-pay-default-rtdb.firebaseio.com",
+    projectId: "dafin-pay",
+    storageBucket: "dafin-pay.appspot.com",
     messagingSenderId: "1234567890",
     appId: "1:1234567890:web:abcdef"
 };
@@ -92,7 +92,7 @@ Aplikasi ini siap dikemas jadi APK tanpa komputer khusus, lewat **PWABuilder**:
 
 ## Keamanan & Skala (anti-benturan data)
 - **Satu proyek Firebase = satu instansi/toko.** Jangan memakai `config.js` yang sama untuk
-  toko yang berbeda — data mereka akan bercampur di node `barokah`. Setiap toko wajib punya
+  toko yang berbeda — data mereka akan bercampur. Setiap toko wajib punya
   proyek Firebase sendiri (tinggal beda isi `config.js`).
 - **Login kasir via Firebase Authentication** (email + sandi). Aturan `rules.json` mengizinkan
   siapa pun membaca (agar wali bisa lihat saldo), tetapi **hanya akun kasir yang sudah login
@@ -116,8 +116,8 @@ Aplikasi ini siap dikemas jadi APK tanpa komputer khusus, lewat **PWABuilder**:
   dicatat dulu (status "Menunggu sinkron...") lalu otomatis dikirim begitu koneksi pulih —
   tidak ada perubahan yang hilang tertimpa data server.
 - **Reset data server**: jalankan `kasir.html` -> Pengaturan -> Reset Semua Data hanya menghapus
-  localStorage perangkat, bukan data Firebase. Untuk membersihkan Firebase, hapus node `barokah`
-  di Realtime Database lewat konsol.
+  localStorage perangkat, bukan data Firebase. Untuk membersihkan Firebase, hapus seluruh isi
+  (node data utama) di Realtime Database lewat konsol.
 - **Setelah memperbarui aplikasi**: ubah angka versi di bagian atas `sw.js`
-  (misal `'barokah-v1'` -> `'barokah-v2'`) lalu deploy ulang, agar HP pengguna
+  (misal `'dafinpay-v1'` -> `'dafinpay-v2'`) lalu deploy ulang, agar HP pengguna
   otomatis mengambil versi baru (cache tidak kadaluarsa sendiri).
