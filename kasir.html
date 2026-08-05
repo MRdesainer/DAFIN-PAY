@@ -3751,10 +3751,19 @@
             banner.classList.remove('hidden');
         } else {
             banner.classList.add('hidden');
-            document.getElementById('judulOverlayLisensi').textContent = s.lisensi ? 'Kunci Lisensi Tidak Valid' : 'Masa Percobaan Berakhir';
-            document.getElementById('teksOverlayLisensi').textContent = s.lisensi
-                ? 'Kunci lisensi yang tersimpan tidak valid. Masukkan kembali kunci resmi Anda.'
-                : 'Masa percobaan aplikasi telah habis. Silakan aktivasi lisensi untuk terus menggunakan aplikasi.';
+            let judul, teks;
+            if (s.lisensi && s.expired) {
+                judul = 'Lisensi Kedaluwarsa';
+                teks = 'Masa berlaku lisensi Anda telah berakhir (s/d ' + (s.exp || '-') + '). Silakan perpanjang lisensi untuk terus menggunakan aplikasi.';
+            } else if (s.lisensi) {
+                judul = 'Kunci Lisensi Tidak Valid';
+                teks = 'Kunci lisensi yang tersimpan tidak valid. Masukkan kembali kunci resmi Anda.';
+            } else {
+                judul = 'Masa Percobaan Berakhir';
+                teks = 'Masa percobaan aplikasi telah habis. Silakan aktivasi lisensi untuk terus menggunakan aplikasi.';
+            }
+            document.getElementById('judulOverlayLisensi').textContent = judul;
+            document.getElementById('teksOverlayLisensi').textContent = teks;
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
         }
