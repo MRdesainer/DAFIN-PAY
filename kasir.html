@@ -2408,6 +2408,20 @@
         ctx.fillText('Founder & Developer', cx, cy + 20);
     }
 
+    function pasangWatermark() {
+        try {
+            const wm = document.createElement('div');
+            wm.id = 'wmFounder';
+            wm.setAttribute('aria-hidden', 'true');
+            wm.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:80;display:flex;align-items:center;gap:8px;opacity:.75;pointer-events:none;user-select:none;filter:drop-shadow(0 1px 2px rgba(6,57,42,.25));';
+            wm.innerHTML = '<img src="' + FOTO_FOUNDER + '" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;display:block;">' +
+                '<span style="line-height:1.2;">' +
+                '<span style="display:block;font-size:11px;font-weight:700;color:#06392A;">Kangmisbah</span>' +
+                '<span style="display:block;font-size:9px;color:#8A7A5C;">Founder &amp; Developer</span></span>';
+            document.body.appendChild(wm);
+        } catch (e) {}
+    }
+
     function buatKartuDepan(s) {
         const W = 640, H = 400;
         const cv = document.createElement('canvas');
@@ -3489,6 +3503,8 @@
 
     // Daftarkan service worker (agar bisa dipasang sebagai aplikasi Android/PWA)
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+
+    pasangWatermark();
     </script>
 </body>
 </html>
