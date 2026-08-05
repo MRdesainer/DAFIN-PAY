@@ -168,6 +168,25 @@
         </div>
     </main>
 
+    <!-- Popup pasang aplikasi (PWA) -->
+    <div id="modalInstall" class="hidden fixed inset-0 z-[90] items-center justify-center p-4 bg-black/50">
+        <div class="bg-white w-full max-w-sm rounded-xl shadow-islami p-5 text-center">
+            <img id="installLogo" src="icons/icon-192.png" alt="Logo" class="w-16 h-16 rounded-2xl mx-auto mb-3 shadow-islami object-cover">
+            <h2 id="installJudul" class="font-bold text-lg text-primary">Pasang Aplikasi Wali</h2>
+            <p id="installTeks" class="text-sm text-stone-500 mt-1">Pasang aplikasi ini di HP agar mudah memantau saldo & mutasi ananda.</p>
+            <div id="caraIOS" class="hidden mt-3 bg-pasir/70 rounded-lg p-3 text-left text-sm text-stone-600 space-y-1.5">
+                <p class="font-semibold text-primary">iPhone / iPad:</p>
+                <p>1. Ketuk ikon <i class="fas fa-share text-[#007AFF]"></i> Bagikan di browser.</p>
+                <p>2. Pilih <b>&quot;Tambahkan ke Layar Utama&quot;</b>.</p>
+                <p>3. Ketuk <b>&quot;Tambahkan&quot;</b>.</p>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button id="btnInstallNanti" class="flex-1 bg-stone-200 text-stone-600 py-2 rounded-lg font-semibold hover:bg-stone-300 transition">Nanti Saja</button>
+                <button id="btnInstallSekarang" class="flex-1 bg-gradient-to-r from-primary to-gelap text-white py-2 rounded-lg font-semibold hover:opacity-90 transition"><i class="fas fa-download mr-1"></i> Pasang Sekarang</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     // ======================== STATE ========================
     let santriList = [];
@@ -225,6 +244,7 @@
                 $('logoWali').src = identitas.logo;
                 $('logoWali').classList.remove('hidden');
                 $('iconDefaultWali').classList.add('hidden');
+                $('installLogo').src = identitas.logo;
             }
             setStatus('Online', true);
             $('splash').classList.add('hidden');
@@ -405,6 +425,73 @@
     });
 
     pasangWatermark();
+    </script>
+    <script>
+    // ======================== POPUP PASANG APLIKASI (PWA) ========================
+    (function() {
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+        let deferredInstall = null;
+        let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        function modal(id) {
+            return document.getElementById(id);
+        }
+        function bukaModal() {
+            const m = modal('modalInstall');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            if (isIOS && !deferredInstall) {
+                modal('caraIOS').classList.remove('hidden');
+                modal('btnInstallSekarang').classList.add('hidden');
+            } else {
+                modal('caraIOS').classList.add('hidden');
+                modal('btnInstallSekarang').classList.remove('hidden');
+            }
+        }
+        function tutupModal() {
+            const m = modal('modalInstall');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        function cobaTawarkan() {
+            try {
+                if (localStorage.getItem('wali_install') === 'yes') return;
+                const tunda = Number(localStorage.getItem('wali_install_tunda') || 0);
+                if (tunda && Date.now() - tunda < 7 * 24 * 3600 * 1000) return;
+                if (deferredInstall || isIOS) bukaModal();
+            } catch {}
+        }
+
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredInstall = e;
+            cobaTawarkan();
+        });
+        window.addEventListener('appinstalled', () => {
+            try { localStorage.setItem('wali_install', 'yes'); } catch {}
+            tutupModal();
+        });
+
+        modal('btnInstallSekarang').addEventListener('click', async () => {
+            if (deferredInstall) {
+                deferredInstall.prompt();
+                try {
+                    const res = await deferredInstall.userChoice;
+                    if (res.outcome === 'accepted') localStorage.setItem('wali_install', 'yes');
+                    else localStorage.setItem('wali_install_tunda', String(Date.now()));
+                } catch {}
+                deferredInstall = null;
+            }
+            tutupModal();
+        });
+        modal('btnInstallNanti').addEventListener('click', () => {
+            try { localStorage.setItem('wali_install_tunda', String(Date.now())); } catch {}
+            tutupModal();
+        });
+
+        if (isIOS) cobaTawarkan();
+        setTimeout(cobaTawarkan, 2500);
+    })();
     </script>
     <script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
