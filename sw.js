@@ -1,7 +1,7 @@
 // Service Worker - Kasir & Tabungan Barokah
 // Ganti "CACHE" versi di bawah ini setiap kali Anda memperbarui app
 // agar pengguna mendapat versi baru (cache ikut ter-refresh).
-const CACHE = 'barokah-v10';
+const CACHE = 'barokah-v11';
 
 const PRECACHE = [
     './index.html',

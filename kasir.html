@@ -253,9 +253,6 @@
                 <button class="subtab bg-pasir px-4 py-2 rounded-lg text-sm font-medium hover:bg-pasirTua" data-stab="riwayatTransaksi">
                     <i class="fas fa-history mr-1"></i> Riwayat Transaksi
                 </button>
-                <button class="subtab bg-pasir px-4 py-2 rounded-lg text-sm font-medium hover:bg-pasirTua" data-stab="portalOrangTua">
-                    <i class="fas fa-user-friends mr-1"></i> Portal Orang Tua
-                </button>
                 <button class="subtab bg-pasir px-4 py-2 rounded-lg text-sm font-medium hover:bg-pasirTua" data-stab="laporanWali">
                     <i class="fas fa-paper-plane mr-1"></i> Laporan ke Wali
                 </button>
@@ -355,47 +352,6 @@
                             </thead>
                             <tbody id="tabelRiwayat"></tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sub: Portal Orang Tua -->
-            <div id="stab-portalOrangTua" class="subhalaman hidden">
-                <div class="max-w-2xl mx-auto">
-                    <div class="bg-gradient-to-r from-islami to-primary text-white rounded-xl p-6 mb-4 text-center">
-                        <i class="fas fa-user-friends text-4xl mb-2"></i>
-                        <h3 class="text-xl font-bold">Portal Orang Tua</h3>
-                        <p class="text-sm opacity-90">Pantau tabungan dan aktivitas santri Anda</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-islami p-4 mb-4">
-                        <label class="text-sm text-stone-600 font-medium">Masukkan Kode Akses Orang Tua</label>
-                        <div class="flex gap-2 mt-2">
-                            <input type="text" id="kodeOrangTua" placeholder="Contoh: OT-001" 
-                                class="flex-1 border rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-primary">
-                            <button id="btnAksesOrangTua" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
-                                <i class="fas fa-sign-in-alt mr-1"></i> Akses
-                            </button>
-                        </div>
-                        <p class="text-xs text-stone-400 mt-2">Kode default: OT-001 s/d OT-010 (sesuai nomor induk santri)</p>
-                    </div>
-                    <div id="panelOrangTua" class="hidden">
-                        <div id="infoOrangTua" class="bg-white rounded-xl shadow-islami p-4 mb-4"></div>
-                        <div class="bg-white rounded-xl shadow-islami p-4">
-                            <h4 class="font-bold mb-3"><i class="fas fa-history text-primary mr-2"></i>Riwayat Transaksi</h4>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-pasir/70">
-                                        <tr>
-                                            <th class="p-2 text-left">Tanggal</th>
-                                            <th class="p-2 text-left">Jenis</th>
-                                            <th class="p-2 text-right">Jumlah</th>
-                                            <th class="p-2 text-left">Keterangan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabelRiwayatOrangTua"></tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -2185,64 +2141,6 @@
         a.download = 'riwayat_tabungan_' + tglNow() + '.csv';
         a.click();
         showToast('Data berhasil di-export!');
-    });
-
-    // ======================== PORTAL ORANG TUA ========================
-    document.getElementById('btnAksesOrangTua').addEventListener('click', () => {
-        const kode = document.getElementById('kodeOrangTua').value.trim();
-        if (!kode) { showToast('Masukkan kode akses!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-        const nisInput = kode.replace('OT-', '').replace(/^0+/, '');
-        const santri = santriList.find(s => s.nis === nisInput || s.nis === nisInput.padStart(3, '0'));
-        if (!santri) { showToast('Kode akses tidak ditemukan!', 'fa-times-circle', 'text-red-400'); return; }
-
-        document.getElementById('panelOrangTua').classList.remove('hidden');
-        const riwayat = riwayatTabungan.filter(r => r.santriId === santri.id).reverse();
-
-        document.getElementById('infoOrangTua').innerHTML = `
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white text-xl font-bold">${santri.nama.charAt(0)}</div>
-                <div>
-                    <h4 class="font-bold text-lg">${santri.nama}</h4>
-                    <p class="text-sm text-stone-500">NIS: ${santri.nis} | Kelas: ${santri.kelas}</p>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-green-50 rounded-lg p-3 text-center">
-                    <p class="text-xs text-stone-500">Saldo Tabungan</p>
-                    <p class="text-xl font-bold text-green-600">${formatRp(santri.saldo)}</p>
-                </div>
-                <div class="bg-blue-50 rounded-lg p-3 text-center">
-                    <p class="text-xs text-stone-500">Total Transaksi</p>
-                    <p class="text-xl font-bold text-blue-600">${riwayat.length}x</p>
-                </div>
-            </div>
-            <div class="mt-3 text-xs text-stone-500">
-                <p><i class="fas fa-phone mr-1"></i> HP: ${santri.hp || '-'}</p>
-                <p><i class="fas fa-user mr-1"></i> Orang Tua: ${santri.orangTua || '-'}</p>
-            </div>
-        `;
-
-        const tbody = document.getElementById('tabelRiwayatOrangTua');
-        tbody.innerHTML = '';
-        if (riwayat.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-stone-400">Belum ada transaksi</td></tr>';
-        } else {
-            riwayat.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-pasir';
-                const jenisLabel = r.jenis === 'setor' ? '<span class="text-green-600">+ Setor</span>'
-                    : r.jenis === 'tarik' ? '<span class="text-red-600">- Tarik</span>'
-                    : '<span class="text-yellow-600">- Belanja</span>';
-                tr.innerHTML = `
-                    <td class="p-2 text-xs">${r.tanggal}</td>
-                    <td class="p-2 text-sm">${jenisLabel}</td>
-                    <td class="p-2 text-right font-medium">${formatRp(r.jumlah)}</td>
-                    <td class="p-2 text-xs text-stone-500">${r.keterangan}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        showToast('Akses berhasil - Data ' + santri.nama);
     });
 
     // ======================== LAPORAN KE WALI ========================
