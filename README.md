@@ -7,6 +7,9 @@ Aplikasi ini bisa **dipasang di HP Android** (ada ikon, layar penuh) dan bisa di
 
 > **Panduan setup lengkap ada di [`SETUP.md`](SETUP.md)** — termasuk langkah untuk
 > menyiapkan proyek Firebase gratis, aturan keamanan, dan checklist saat menjual ke toko lain.
+>
+> **Materi penawaran ke pembeli ada di [`MATERI-PENJUALAN.md`](MATERI-PENJUALAN.md)**
+> (fitur, paket lisensi, serah terima, aktivasi, tanya-jawab).
 
 ## Isi Folder
 - `kasir.html` — aplikasi kasir untuk penjaga koperasi / admin (tersinkron realtime)
