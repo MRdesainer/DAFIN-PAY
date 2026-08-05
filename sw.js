@@ -1,7 +1,7 @@
 // Service Worker - Kasir & Tabungan Barokah
 // Ganti "CACHE" versi di bawah ini setiap kali Anda memperbarui app
 // agar pengguna mendapat versi baru (cache ikut ter-refresh).
-const CACHE = 'barokah-v19';
+const CACHE = 'barokah-v20';
 
 const PRECACHE = [
     './index.html',
@@ -12,7 +12,8 @@ const PRECACHE = [
     './manifest-kasir.json',
     './manifest-wali.json',
     './icons/icon-192.png',
-    './icons/icon-512.png'
+    './icons/icon-512.png',
+    './suara-sukses.mp3'
 ];
 
 self.addEventListener('install', e => {
