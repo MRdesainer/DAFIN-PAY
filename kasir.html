@@ -553,6 +553,7 @@
                                 <th class="p-2 text-left">Kode</th>
                                 <th class="p-2 text-left">Nama Barang</th>
                                 <th class="p-2 text-right">Harga</th>
+                                <th class="p-2 text-center">Diskon</th>
                                 <th class="p-2 text-center">Stok</th>
                                 <th class="p-2 text-center">Halal</th>
                                 <th class="p-2 text-center">Aksi</th>
@@ -1136,6 +1137,10 @@
                 <div>
                     <label class="text-sm text-stone-600">Harga (Rp)</label>
                     <input type="number" id="inputHargaBarang" placeholder="0" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-sm text-stone-600">Diskon (%)</label>
+                    <input type="number" id="inputDiskonBarang" min="0" max="100" placeholder="0" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
                 </div>
                 <div>
                     <label class="text-sm text-stone-600">Stok</label>
@@ -1798,10 +1803,17 @@
             div.dataset.harga = p.harga;
             div.dataset.kode = p.kode;
             div.dataset.id = p.id;
+            const diskon = parseFloat(p.diskon) || 0;
+            const hargaJual = hargaJualProduk(p);
             div.innerHTML = `
                 <div class="text-2xl mb-1">${p.emoji || '📦'}</div>
                 <div class="text-sm font-medium">${p.nama}</div>
-                <div class="text-xs text-primary font-bold">${formatRp(p.harga)}</div>
+                ${diskon > 0 ? `
+                    <div class="text-xs">
+                        <span class="text-stone-400 line-through">${formatRp(p.harga)}</span>
+                        <span class="bg-red-500 text-white rounded px-1 ml-1">-${diskon}%</span>
+                    </div>` : ''}
+                <div class="text-xs text-primary font-bold">${formatRp(hargaJual)}</div>
                 <div class="text-xs ${p.stok > 0 ? 'text-green-500' : 'text-red-500'}">Stok: ${p.stok}</div>
             `;
             if (p.stok > 0) {
@@ -1825,7 +1837,7 @@
             if (ada.jumlah >= produk.stok) { showToast('Stok tidak cukup!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
             ada.jumlah++;
         } else {
-            keranjang.push({ id: produk.id, nama: produk.nama, harga: produk.harga, kode: produk.kode, jumlah: 1, stok: produk.stok });
+            keranjang.push({ id: produk.id, nama: produk.nama, harga: hargaJualProduk(produk), kode: produk.kode, jumlah: 1, stok: produk.stok, diskon: parseFloat(produk.diskon) || 0 });
         }
         updateKeranjang();
         showToast(produk.nama + ' ditambahkan');
@@ -2074,7 +2086,7 @@
         html += `<div class="text-center mb-2">${tglFull()}</div>`;
         html += `<div class="border-t border-dashed border-gray-400 my-1"></div>`;
         trx.items.forEach(it => {
-            html += `<div class="flex justify-between"><span>${it.nama} x${it.jumlah}</span><span>${formatRp(it.harga * it.jumlah)}</span></div>`;
+            html += `<div class="flex justify-between"><span>${it.nama} x${it.jumlah}${it.diskon ? ` <span class="text-red-500">(-${it.diskon}%)</span>` : ''}</span><span>${formatRp(it.harga * it.jumlah)}</span></div>`;
         });
         html += `<div class="border-t border-dashed border-gray-400 my-1"></div>`;
         html += `<div class="flex justify-between font-bold text-base"><span>TOTAL</span><span>${formatRp(trx.total)}</span></div>`;
@@ -2146,7 +2158,8 @@
         lines.push(' *Detail Pembelian:*');
 
         trx.items.forEach((it, i) => {
-            lines.push(` ${i + 1}. ${it.nama} x${it.jumlah} = ${formatRp(it.harga * it.jumlah)}`);
+            const disc = it.diskon ? ` (-${it.diskon}%)` : '';
+            lines.push(` ${i + 1}. ${it.nama}${disc} x${it.jumlah} = ${formatRp(it.harga * it.jumlah)}`);
         });
 
         lines.push('');
@@ -3451,6 +3464,10 @@
     });
 
     // ======================== HALAMAN BARANG ========================
+    function hargaJualProduk(p) {
+        const diskon = parseFloat(p.diskon) || 0;
+        return Math.round((p.harga * (100 - diskon)) / 100);
+    }
     function renderTabelBarang() {
         const tbody = document.getElementById('tabelBarang');
         tbody.innerHTML = '';
@@ -3461,6 +3478,7 @@
                 <td class="p-2 text-xs">${p.kode}</td>
                 <td class="p-2 text-sm">${p.emoji || ''} ${p.nama}</td>
                 <td class="p-2 text-right text-sm">${formatRp(p.harga)}</td>
+                <td class="p-2 text-center text-sm">${p.diskon ? `<span class="text-red-500 font-bold">${p.diskon}%</span>` : '-'}</td>
                 <td class="p-2 text-center text-sm ${p.stok < 10 ? 'text-red-500 font-bold' : ''}">${p.stok}</td>
                 <td class="p-2 text-center">${p.halal ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-times-circle text-red-500"></i>'}</td>
                 <td class="p-2 text-center">
@@ -3477,6 +3495,7 @@
         document.getElementById('inputKodeBarang').value = '';
         document.getElementById('inputNamaBarang').value = '';
         document.getElementById('inputHargaBarang').value = '';
+        document.getElementById('inputDiskonBarang').value = '0';
         document.getElementById('inputStokBarang').value = '';
         document.getElementById('inputEmojiBarang').value = '📦';
         document.getElementById('inputHalalBarang').checked = true;
@@ -3500,6 +3519,7 @@
                 document.getElementById('inputKodeBarang').value = p.kode;
                 document.getElementById('inputNamaBarang').value = p.nama;
                 document.getElementById('inputHargaBarang').value = p.harga;
+                document.getElementById('inputDiskonBarang').value = p.diskon || 0;
                 document.getElementById('inputStokBarang').value = p.stok;
                 document.getElementById('inputEmojiBarang').value = p.emoji || '📦';
                 document.getElementById('inputHalalBarang').checked = p.halal;
@@ -3526,11 +3546,13 @@
         const kode = document.getElementById('inputKodeBarang').value.trim();
         const nama = document.getElementById('inputNamaBarang').value.trim();
         const harga = parseInt(document.getElementById('inputHargaBarang').value) || 0;
+        const diskon = parseFloat(document.getElementById('inputDiskonBarang').value) || 0;
         const stok = parseInt(document.getElementById('inputStokBarang').value) || 0;
         const emoji = document.getElementById('inputEmojiBarang').value.trim() || '📦';
         const halal = document.getElementById('inputHalalBarang').checked;
 
         if (!kode || !nama || !harga) { showToast('Kode, Nama, dan Harga wajib diisi!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+        if (diskon < 0 || diskon > 100) { showToast('Diskon harus antara 0 - 100%!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
         if (produkList.some(p => p.kode === kode && p.id !== parseInt(editId || 0))) {
             showToast('Kode barang sudah digunakan!', 'fa-exclamation-triangle', 'text-yellow-400'); return;
         }
@@ -3538,9 +3560,9 @@
         let dataBarang = null;
         if (editId) {
             dataBarang = produkList.find(x => x.id === parseInt(editId));
-            if (dataBarang) { dataBarang.kode = kode; dataBarang.nama = nama; dataBarang.harga = harga; dataBarang.stok = stok; dataBarang.emoji = emoji; dataBarang.halal = halal; }
+            if (dataBarang) { dataBarang.kode = kode; dataBarang.nama = nama; dataBarang.harga = harga; dataBarang.diskon = diskon; dataBarang.stok = stok; dataBarang.emoji = emoji; dataBarang.halal = halal; }
         } else {
-            dataBarang = { id: Date.now(), kode, nama, harga, stok: stok || 0, emoji, halal };
+            dataBarang = { id: Date.now(), kode, nama, harga, diskon, stok: stok || 0, emoji, halal };
             produkList.push(dataBarang);
         }
         simpanLokal('produk');
