@@ -734,6 +734,19 @@
                     </div>
                 </div>
 
+                <!-- Suara Transaksi Sukses -->
+                <div class="bg-white rounded-xl shadow-islami p-4">
+                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-check-circle text-primary mr-2"></i>Suara Transaksi Sukses</h3>
+                    <p class="text-xs text-stone-500 mb-3">Setiap transaksi berhasil (belanja / tabungan / pembayaran), aplikasi membunyikan nada sukses dan ucapan terima kasih.</p>
+                    <label class="flex items-center gap-2 text-sm mb-3">
+                        <input type="checkbox" id="setSuaraSukses" class="rounded text-primary">
+                        <span>Bunyikan suara & ucapan terima kasih</span>
+                    </label>
+                    <button id="btnTestSuaraSukses" class="w-full bg-islami text-white py-2 rounded-lg font-bold hover:opacity-90 transition">
+                        <i class="fas fa-volume-up mr-2"></i> Test Suara
+                    </button>
+                </div>
+
                 <!-- Password Admin -->
                 <div class="bg-white rounded-xl shadow-islami p-4">
                     <h3 class="font-bold text-lg mb-3"><i class="fas fa-shield-alt text-primary mr-2"></i>Akun Admin (Username & Password)</h3>
@@ -1434,6 +1447,45 @@
         } catch {}
     }
 
+    let audioCtxSukses = null;
+    function mainkanSuaraSukses() {
+        if (identitas && identitas.suaraSukses === false) return;
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) {
+                if (!audioCtxSukses) audioCtxSukses = new AC();
+                const ctx = audioCtxSukses;
+                if (ctx.state === 'suspended') ctx.resume();
+                const catatan = [523.25, 659.25, 783.99];
+                let t = ctx.currentTime + 0.03;
+                catatan.forEach(f => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = f;
+                    gain.gain.setValueAtTime(0.0001, t);
+                    gain.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.4);
+                    t += 0.18;
+                });
+            }
+        } catch {}
+        try {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance('Terima kasih, barakallah.');
+                u.lang = 'id-ID';
+                u.rate = 1.05;
+                u.pitch = 1;
+                window.speechSynthesis.speak(u);
+            }
+        } catch {}
+    }
+
     let adzanTerakhir = {};
     function cekWaktuSholat() {
         const conf = sholatConf();
@@ -1737,6 +1789,7 @@
         };
         riwayatPenjualan.push(transaksi);
         saveAll();
+        mainkanSuaraSukses();
 
         // Simpan transaksi terakhir
         transaksiTerakhir = { ...transaksi };
@@ -2020,6 +2073,7 @@
         document.getElementById('infoSaldo').classList.add('hidden');
         refreshDaftarSantri();
         refreshSelectSantri();
+        mainkanSuaraSukses();
         showToast(`${jenisTransaksiAktif === 'setor' ? 'Setor' : 'Tarik'} ${formatRp(jumlah)} berhasil!`);
     });
 
@@ -2902,6 +2956,7 @@
         renderPembayaranWali();
         if (typeof refreshDaftarSantri === 'function') refreshDaftarSantri();
         if (typeof refreshSelectSantri === 'function') refreshSelectSantri();
+        mainkanSuaraSukses();
         showToast(`Pembayaran ${formatRp(jumlah)} untuk ${santri.nama} tercatat!`);
     });
 
@@ -3303,6 +3358,7 @@
             document.getElementById('setSholatSuara').checked = !!sc.suara;
             document.getElementById('setSholatOverlay').checked = !!sc.overlay;
             document.getElementById('setSholatAudioUrl').value = sc.audioUrl || '';
+            document.getElementById('setSuaraSukses').checked = identitas.suaraSukses !== false;
             if (identitas.logo) {
                 document.getElementById('previewLogoImg').src = identitas.logo;
                 document.getElementById('previewLogoImg').classList.remove('hidden');
@@ -3387,6 +3443,17 @@
         const sc = sholatConf();
         sc.audioUrl = document.getElementById('setSholatAudioUrl').value.trim();
         mainkanAdzan();
+    });
+
+    // Suara transaksi sukses
+    document.getElementById('setSuaraSukses').addEventListener('change', () => {
+        identitas.suaraSukses = document.getElementById('setSuaraSukses').checked;
+        DB.set('identitas', identitas);
+        showToast('Pengaturan suara disimpan!');
+    });
+    document.getElementById('btnTestSuaraSukses').addEventListener('click', () => {
+        identitas.suaraSukses = document.getElementById('setSuaraSukses').checked;
+        mainkanSuaraSukses();
     });
 
     // Ubah username & password
