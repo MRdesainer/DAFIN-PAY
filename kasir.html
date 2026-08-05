@@ -76,6 +76,48 @@
         </div>
     </div>
 
+    <!-- Modal aktivasi lisensi -->
+    <div id="modalLisensi" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[90]">
+        <div class="bg-white w-full max-w-sm rounded-xl p-5 m-3 shadow-islami-lg">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-bold"><i class="fas fa-key text-emas mr-2"></i>Aktivasi Lisensi</h3>
+                <button id="tutupModalLisensi" class="text-stone-500 hover:text-stone-800 text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <p class="text-xs text-stone-500 mb-3">Masukkan kunci lisensi resmi yang Anda terima untuk membuka aplikasi.</p>
+            <input id="inputKunciLisensi" type="text" placeholder="BAROKAH-XXXX-XXXX-XXXX-XXXX" class="w-full border rounded-lg py-2 px-3 text-sm text-center mb-2 tracking-wider focus:ring-2 focus:ring-primary">
+            <p id="pesanLisensi" class="text-xs text-red-500 mb-2 hidden"></p>
+            <button id="btnSimpanLisensi" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold">
+                <i class="fas fa-key mr-1"></i> Aktivasi
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay blokir saat lisensi tidak aktif / masa percobaan habis -->
+    <div id="overlayLisensi" class="fixed inset-0 z-[95] hidden items-center justify-center p-4" style="background-image: linear-gradient(160deg,#FBF7EE 0%,#F6ECD7 55%,#F0E0C3 100%);">
+        <div class="w-full max-w-sm text-center">
+            <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-ban text-2xl text-white"></i>
+            </div>
+            <h1 id="judulOverlayLisensi" class="text-2xl font-extrabold text-red-600">Lisensi Tidak Aktif</h1>
+            <p id="teksOverlayLisensi" class="text-sm text-stone-500 mt-1 mb-4">Masa percobaan aplikasi telah habis. Silakan aktivasi untuk melanjutkan.</p>
+            <button id="btnOverlayAktivasi" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold mb-2">
+                <i class="fas fa-key mr-1"></i> Masukkan Kunci Lisensi
+            </button>
+            <p class="text-[11px] text-stone-400">Hubungi admin untuk mendapatkan kunci lisensi resmi.</p>
+        </div>
+    </div>
+
+    <!-- Banner masa percobaan -->
+    <div id="bannerTrial" class="fixed bottom-0 inset-x-0 z-[60] hidden">
+        <div class="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-3 py-2 shadow-lg">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-hourglass-half"></i>
+                <span id="bannerTrialTeks">Masa percobaan</span>
+            </div>
+            <button id="btnBannerAktivasi" class="bg-white text-orange-600 font-bold px-3 py-1 rounded-full hover:opacity-90 transition shrink-0">Aktivasi Lisensi</button>
+        </div>
+    </div>
+
     <!-- Overlay sinkronisasi online -->
     <div id="splashOnline" class="fixed inset-0 z-[60] hidden items-center justify-center bg-white/95 backdrop-blur">
         <div class="text-center">
@@ -750,6 +792,13 @@
                     <button id="btnTestSuaraSukses" class="w-full bg-islami text-white py-2 rounded-lg font-bold hover:opacity-90 transition">
                         <i class="fas fa-volume-up mr-2"></i> Test Suara
                     </button>
+                </div>
+
+                <!-- Status Lisensi -->
+                <div class="bg-white rounded-xl shadow-islami p-4">
+                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-key text-primary mr-2"></i>Lisensi Aplikasi</h3>
+                    <p class="text-xs text-stone-500 mb-3">Aplikasi kasir dilindungi lisensi. Pastikan lisensi aktif agar aplikasi tidak terkunci.</p>
+                    <div id="kartuLisensi" class="space-y-2"></div>
                 </div>
 
                 <!-- Password Admin -->
@@ -3611,6 +3660,139 @@
         } catch {}
         setTimeout(() => document.getElementById('lockUsername').focus(), 100);
     })();
+
+    // ======================== SISTEM LISENSI APLIKASI ========================
+    const MASA_TRIAL = 14;
+
+    function hashKunci(s) {
+        let h = 5381;
+        for (let i = 0; i < s.length; i++) { h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; }
+        return h.toString(36).toUpperCase().padStart(8, '0');
+    }
+    function decodeLisensi(kunci) {
+        try {
+            const m = /^BAROKAH-([A-Za-z0-9_-]+)-([A-Z0-9]{8})$/.exec(String(kunci).trim().replace(/\s+/g, ''));
+            if (!m) return null;
+            let s = m[1].replace(/-/g, '+').replace(/_/g, '/');
+            while (s.length % 4) s += '=';
+            if (hashKunci(m[1] + 'RUKYAH2024') !== m[2]) return null;
+            const json = new TextDecoder().decode(Uint8Array.from(atob(s), c => c.charCodeAt(0)));
+            const p = JSON.parse(json);
+            if (!p || typeof p.n !== 'string' || !p.n) return null;
+            return { n: p.n, e: p.e || '' };
+        } catch (e) { return null; }
+    }
+    function tglHariIni() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function statusLisensi() {
+        let raw = null;
+        try { raw = localStorage.getItem('barokah_license'); } catch {}
+        if (raw) {
+            try {
+                const j = JSON.parse(raw);
+                const d = decodeLisensi(j.kunci);
+                if (d) {
+                    const expired = !!d.e && d.e < tglHariIni();
+                    return { lisensi: true, valid: !expired, expired, nama: d.n, exp: d.e, trialHari: 0 };
+                }
+            } catch {}
+            return { lisensi: true, valid: false, expired: false, nama: null, exp: null, trialHari: 0 };
+        }
+        let first = 0;
+        try { first = parseInt(localStorage.getItem('barokah_first_run')) || 0; } catch {}
+        if (!first) { first = Date.now(); try { localStorage.setItem('barokah_first_run', String(first)); } catch {} }
+        const trialHari = MASA_TRIAL - (Date.now() - first) / 86400000;
+        return { lisensi: false, valid: false, expired: false, nama: null, exp: null, trialHari };
+    }
+    function escTeks(s) {
+        return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function renderKartuLisensi() {
+        const el = document.getElementById('kartuLisensi');
+        if (!el) return;
+        const s = statusLisensi();
+        let html;
+        if (s.lisensi && s.valid) {
+            html = '<div class="bg-green-50 border border-green-200 rounded-lg p-3">' +
+                '<p class="font-bold text-green-700"><i class="fas fa-check-circle mr-1"></i>Lisensi Aktif</p>' +
+                '<p class="text-xs text-green-600 mt-1">Instansi: <b>' + escTeks(s.nama) + '</b></p>' +
+                (s.exp ? '<p class="text-xs text-green-600">Berlaku s/d: <b>' + escTeks(s.exp) + '</b></p>' : '<p class="text-xs text-green-600">Masa berlaku: <b>Selamanya</b></p>') +
+                '</div>' +
+                '<button id="btnBukaLisensi" class="w-full bg-islami text-white py-2 rounded-lg text-sm hover:opacity-90"><i class="fas fa-key mr-1"></i> Lihat / Ubah Kunci</button>';
+        } else if (!s.lisensi && s.trialHari > 0) {
+            html = '<div class="bg-amber-50 border border-amber-200 rounded-lg p-3">' +
+                '<p class="font-bold text-amber-700"><i class="fas fa-hourglass-half mr-1"></i>Masa Percobaan</p>' +
+                '<p class="text-xs text-amber-600 mt-1">Tersisa <b>' + Math.ceil(s.trialHari) + ' hari</b> lagi. Aktivasi lisensi untuk fitur penuh selamanya.</p>' +
+                '</div>' +
+                '<button id="btnBukaLisensi" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2 rounded-lg text-sm hover:opacity-90"><i class="fas fa-key mr-1"></i> Aktivasi Lisensi</button>';
+        } else {
+            html = '<div class="bg-red-50 border border-red-200 rounded-lg p-3">' +
+                '<p class="font-bold text-red-700"><i class="fas fa-exclamation-circle mr-1"></i>Lisensi Tidak Aktif</p>' +
+                '<p class="text-xs text-red-600 mt-1">Masa percobaan habis atau kunci tidak valid.</p>' +
+                '</div>' +
+                '<button id="btnBukaLisensi" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2 rounded-lg text-sm hover:opacity-90"><i class="fas fa-key mr-1"></i> Aktivasi Lisensi</button>';
+        }
+        el.innerHTML = html;
+        const b = document.getElementById('btnBukaLisensi');
+        if (b) b.addEventListener('click', bukaModalLisensi);
+    }
+    function muhasabahLisensi() {
+        const s = statusLisensi();
+        const overlay = document.getElementById('overlayLisensi');
+        const banner = document.getElementById('bannerTrial');
+        if (s.lisensi && s.valid) {
+            overlay.classList.add('hidden'); overlay.classList.remove('flex');
+            banner.classList.add('hidden');
+        } else if (!s.lisensi && s.trialHari > 0) {
+            overlay.classList.add('hidden'); overlay.classList.remove('flex');
+            document.getElementById('bannerTrialTeks').textContent = 'Masa percobaan tersisa ' + Math.ceil(s.trialHari) + ' hari';
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+            document.getElementById('judulOverlayLisensi').textContent = s.lisensi ? 'Kunci Lisensi Tidak Valid' : 'Masa Percobaan Berakhir';
+            document.getElementById('teksOverlayLisensi').textContent = s.lisensi
+                ? 'Kunci lisensi yang tersimpan tidak valid. Masukkan kembali kunci resmi Anda.'
+                : 'Masa percobaan aplikasi telah habis. Silakan aktivasi lisensi untuk terus menggunakan aplikasi.';
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+        renderKartuLisensi();
+    }
+    function bukaModalLisensi() {
+        const modal = document.getElementById('modalLisensi');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('pesanLisensi').classList.add('hidden');
+        setTimeout(() => document.getElementById('inputKunciLisensi').focus(), 100);
+    }
+    function tutupModalLisensi() {
+        const modal = document.getElementById('modalLisensi');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    function simpanKunciLisensi() {
+        const inp = document.getElementById('inputKunciLisensi');
+        const pesan = document.getElementById('pesanLisensi');
+        const d = decodeLisensi(inp.value);
+        if (!d) {
+            pesan.textContent = 'Kunci lisensi tidak valid. Periksa kembali penulisannya.';
+            pesan.classList.remove('hidden');
+            return;
+        }
+        try { localStorage.setItem('barokah_license', JSON.stringify({ kunci: inp.value.trim(), nama: d.n, exp: d.e, sejak: Date.now() })); } catch {}
+        inp.value = '';
+        tutupModalLisensi();
+        muhasabahLisensi();
+        showToast('Lisensi berhasil diaktifkan!', 'fa-key', 'text-green-400');
+    }
+    document.getElementById('btnBannerAktivasi').addEventListener('click', bukaModalLisensi);
+    document.getElementById('btnOverlayAktivasi').addEventListener('click', bukaModalLisensi);
+    document.getElementById('btnSimpanLisensi').addEventListener('click', simpanKunciLisensi);
+    document.getElementById('tutupModalLisensi').addEventListener('click', tutupModalLisensi);
+    document.getElementById('inputKunciLisensi').addEventListener('keydown', e => { if (e.key === 'Enter') simpanKunciLisensi(); });
+    muhasabahLisensi();
 
     // Daftarkan service worker (agar bisa dipasang sebagai aplikasi Android/PWA)
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
