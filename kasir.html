@@ -3240,7 +3240,15 @@
         document.getElementById('overlaySholat').classList.remove('flex');
     });
     document.getElementById('btnKeluar').addEventListener('click', () => {
-        if (confirm('Keluar dari aplikasi?')) showToast('Terima kasih! Barakallah.', 'fa-sign-out-alt', 'text-blue-400');
+        if (!confirm('Keluar dari aplikasi kasir?')) return;
+        try { localStorage.removeItem('barokah_lock'); } catch {}
+        document.getElementById('lockPassword').value = '';
+        document.getElementById('lockPesan').classList.add('hidden');
+        const lock = document.getElementById('lockApp');
+        lock.classList.remove('hidden');
+        lock.classList.add('flex');
+        showToast('Terima kasih! Barakallah.', 'fa-sign-out-alt', 'text-blue-400');
+        setTimeout(() => document.getElementById('lockPassword').focus(), 100);
     });
 
     // ======================== START ONLINE SYNC ========================
