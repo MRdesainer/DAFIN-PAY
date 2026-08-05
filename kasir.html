@@ -68,7 +68,8 @@
         <div class="w-full max-w-sm text-center">
             <img src="icons/icon-192.png" alt="Logo" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-islami object-cover">
             <h1 class="text-2xl font-extrabold teks-emas">Aplikasi Kasir</h1>
-            <p class="text-sm text-stone-500 mt-1 mb-4">Masukkan password admin untuk masuk.</p>
+            <p class="text-sm text-stone-500 mt-1 mb-4">Masukkan username & password admin untuk masuk.</p>
+            <input id="lockUsername" type="text" placeholder="Username admin" class="w-full border rounded-lg py-2 px-3 text-sm text-center mb-2 focus:ring-2 focus:ring-primary focus:border-primary">
             <input id="lockPassword" type="password" placeholder="Password admin" class="w-full border rounded-lg py-2 px-3 text-sm text-center focus:ring-2 focus:ring-primary focus:border-primary">
             <p id="lockPesan" class="text-xs text-red-500 mt-2 hidden"></p>
             <button id="btnLockMasuk" class="w-full bg-gradient-to-r from-primary to-gelap text-white py-2.5 rounded-lg font-bold mt-3 ring-1 ring-secondary/40">Masuk</button>
@@ -587,7 +588,9 @@
                     <i class="fas fa-lock text-2xl text-white"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Akses Admin</h3>
-                <p class="text-sm text-stone-500 mb-4">Masukkan kata sandi admin untuk mengakses pengaturan</p>
+                <p class="text-sm text-stone-500 mb-4">Masukkan username & kata sandi admin untuk mengakses pengaturan</p>
+                <input type="text" id="inputAdminUser" placeholder="Username admin" 
+                    class="w-full border rounded-lg py-2 px-3 text-sm mb-2 focus:ring-2 focus:ring-primary">
                 <input type="password" id="inputAdminPass" placeholder="Kata sandi admin" 
                     class="w-full border rounded-lg py-2 px-3 text-sm mb-3 focus:ring-2 focus:ring-primary">
                 <button id="btnLoginAdmin" class="w-full bg-primary text-white py-2 rounded-lg font-bold hover:opacity-90 transition">
@@ -665,6 +668,11 @@
                                 </div>
                             </div>
                         </div>
+                        <div>
+                            <label class="text-sm text-stone-600 font-medium">Link Aplikasi Wali</label>
+                            <input type="text" id="setLinkWali" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary" placeholder="https://.../wali.html">
+                            <p class="text-[11px] text-stone-400 mt-1">Dipakai untuk QR di belakang kartu santri agar wali langsung bisa menginstall aplikasi wali.</p>
+                        </div>
                         <button id="btnSimpanIdentitas" class="w-full bg-primary text-white py-2 rounded-lg font-bold hover:opacity-90 transition">
                             <i class="fas fa-save mr-2"></i> Simpan Identitas
                         </button>
@@ -728,8 +736,13 @@
 
                 <!-- Password Admin -->
                 <div class="bg-white rounded-xl shadow-islami p-4">
-                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-shield-alt text-primary mr-2"></i>Ubah Password Admin</h3>
+                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-shield-alt text-primary mr-2"></i>Akun Admin (Username & Password)</h3>
                     <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-stone-600 font-medium">Username Baru</label>
+                            <input type="text" id="setUsername" class="w-full border rounded-lg py-2 px-3 text-sm mt-1" placeholder="Kosongkan jika tidak diubah">
+                            <p class="text-[11px] text-stone-400 mt-1">Default: admin</p>
+                        </div>
                         <div>
                             <label class="text-sm text-stone-600 font-medium">Password Lama</label>
                             <input type="password" id="setPassLama" class="w-full border rounded-lg py-2 px-3 text-sm mt-1" placeholder="Password lama">
@@ -743,7 +756,7 @@
                             <input type="password" id="setPassKonfirm" class="w-full border rounded-lg py-2 px-3 text-sm mt-1" placeholder="Ulangi password baru">
                         </div>
                         <button id="btnUbahPass" class="w-full bg-gelap text-white py-2 rounded-lg font-bold hover:opacity-90 transition">
-                            <i class="fas fa-key mr-2"></i> Ubah Password
+                            <i class="fas fa-key mr-2"></i> Simpan Username / Ubah Password
                         </button>
                     </div>
                 </div>
@@ -981,6 +994,20 @@
             </div>
             <div id="scannerArea" class="rounded-xl overflow-hidden mb-3 bg-black" style="min-height:250px;"></div>
             <div id="scannerResult" class="text-center text-sm text-stone-500 mb-3">Arahkan kamera ke barcode santri</div>
+            <div id="hasilScanPanel" class="hidden mb-3 rounded-xl border-2 border-green-500 bg-green-50 p-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold shrink-0" id="hasilScanAvatar">S</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-stone-800 truncate" id="hasilScanNama">-</p>
+                        <p class="text-xs text-stone-500" id="hasilScanNis">NIS: -</p>
+                        <p class="text-xs text-stone-500" id="hasilScanKelas">-</p>
+                        <p class="text-xs font-bold" id="hasilScanSaldo">-</p>
+                    </div>
+                    <button id="btnPilihHasilScan" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 whitespace-nowrap shrink-0">
+                        <i class="fas fa-check mr-1"></i>Pilih Santri
+                    </button>
+                </div>
+            </div>
             <div class="text-center">
                 <p class="text-xs text-stone-400 mb-2">Atau masukkan NIS manual:</p>
                 <div class="flex gap-2">
@@ -1162,7 +1189,7 @@
     }
 
     // ======================== ONLINE SYNC (FIREBASE) ========================
-    const ONLINE_KEYS = ['produk', 'santri', 'riwayat_tabungan', 'riwayat_penjualan', 'pembayaran_wali', 'identitas', 'admin_pass'];
+    const ONLINE_KEYS = ['produk', 'santri', 'riwayat_tabungan', 'riwayat_penjualan', 'pembayaran_wali', 'identitas', 'admin_pass', 'admin_user'];
     function setStatusOnline(txt, ok) {
         const el = document.getElementById('statusOnline');
         if (!el) return;
@@ -1196,6 +1223,7 @@
         if (data.pembayaran_wali) pembayaranWali = data.pembayaran_wali;
         if (data.transaksi) logTransaksiKasir = Object.values(data.transaksi);
         if (data.identitas) identitas = data.identitas;
+        if (data.admin_user) adminUsername = data.admin_user;
         if (data.admin_pass) adminPassword = data.admin_pass;
         __cache = Object.assign({}, data);
         if (data.identitas) terapkanIdentitas();
@@ -1225,7 +1253,7 @@
                 const isEmpty = Object.keys(data).length === 0;
                 if (isEmpty && !window.__firstSyncDone) {
                     // Belum ada data di server: seeding data lokal sebagai sumber awal
-                    const initial = { produk: produkList, santri: santriList, riwayat_tabungan: riwayatTabungan, riwayat_penjualan: riwayatPenjualan, pembayaran_wali: pembayaranWali, identitas: identitas, admin_pass: adminPassword };
+                    const initial = { produk: produkList, santri: santriList, riwayat_tabungan: riwayatTabungan, riwayat_penjualan: riwayatPenjualan, pembayaran_wali: pembayaranWali, identitas: identitas, admin_pass: adminPassword, admin_user: adminUsername };
                     firebase.database().ref('barokah').set(initial).then(() => {
                         window.__firstSyncDone = true;
                         setStatusOnline('Online', true);
@@ -2339,9 +2367,7 @@
     }
 
     // Membuat gambar Kartu Tanda Santri (canvas 640x400, proporsi kartu ID)
-    function buatKartuSantri(santriId) {
-        const s = santriList.find(x => x.id === santriId);
-        if (!s) return null;
+    function buatKartuDepan(s) {
         const W = 640, H = 400;
         const cv = document.createElement('canvas');
         cv.width = W; cv.height = H;
@@ -2373,37 +2399,17 @@
         ctx.font = 'bold 31px "Segoe UI", sans-serif';
         ctx.fillText('KARTU TANDA SANTRI', 40, 82);
 
-        // Avatar bulat (inisial)
-        const ax = 118, ay = 238, ar = 60;
-        ctx.beginPath();
-        ctx.arc(ax, ay, ar, 0, Math.PI * 2);
-        ctx.fillStyle = '#1E9E6A';
-        ctx.fill();
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = '#E8C25C';
-        ctx.stroke();
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 60px "Segoe UI", sans-serif';
+        // Nama & NIS di atas QR
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(s.nama.charAt(0).toUpperCase(), ax, ay + 2);
-
-        // Data santri
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = '#06392A';
-        ctx.font = 'bold 30px "Segoe UI", sans-serif';
-        ctx.fillText(s.nama, 200, 222);
+        ctx.font = 'bold 28px "Segoe UI", sans-serif';
+        ctx.fillText(s.nama, 320, 160);
         ctx.fillStyle = '#3F3A2E';
-        ctx.font = '21px "Segoe UI", sans-serif';
-        ctx.fillText('NIS: ' + s.nis, 200, 258);
-        ctx.fillText('Kelas: ' + (s.kelas || '-'), 200, 292);
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '16px "Segoe UI", sans-serif';
-        ctx.fillText('Orang Tua: ' + (s.orangTua || '-'), 200, 330);
+        ctx.font = '20px "Segoe UI", sans-serif';
+        ctx.fillText('NIS: ' + s.nis + ' | Kelas: ' + (s.kelas || '-'), 320, 192);
 
-        // Kotak QR
-        const qx = 428, qy = 112, qsize = 188;
+        // Kotak barcode (QR) besar
+        const qx = 320 - 130, qy = 202, qsize = 260;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -2427,12 +2433,10 @@
         document.body.removeChild(tmp);
 
         ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 13px "Segoe UI", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('SCAN UNTUK BELANJA', qx + qsize / 2, qy + qsize + 27);
+        ctx.font = 'bold 15px "Segoe UI", sans-serif';
+        ctx.fillText('SCAN UNTUK BELANJA', 320, qy + qsize + 30);
 
         // Kaki kartu
-        ctx.textAlign = 'left';
         ctx.strokeStyle = '#E7D8B6';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -2441,12 +2445,176 @@
         ctx.stroke();
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '13px "Segoe UI", sans-serif';
-        ctx.textAlign = 'center';
         const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
         ctx.fillText(alamat || identitas.namaApp, 320, 388);
         ctx.textAlign = 'left';
 
         return cv;
+    }
+
+    function buatKartuBelakang(s) {
+        const W = 640, H = 400;
+        const cv = document.createElement('canvas');
+        cv.width = W; cv.height = H;
+        const ctx = cv.getContext('2d');
+
+        // Latar kartu putih (rounded)
+        ctx.fillStyle = '#FFFFFF';
+        rrPath(ctx, 0, 0, W, H, 24);
+        ctx.fill();
+
+        // Kepala kartu
+        const grad = ctx.createLinearGradient(0, 0, W, 0);
+        grad.addColorStop(0, '#0B6B4F');
+        grad.addColorStop(1, '#06392A');
+        ctx.fillStyle = grad;
+        rrPath(ctx, 0, 0, W, 100, 24);
+        ctx.fill();
+        ctx.fillRect(0, 50, W, 50);
+        ctx.fillStyle = '#C9A227';
+        ctx.fillRect(0, 100, W, 6);
+
+        ctx.fillStyle = '#E8C25C';
+        ctx.font = 'bold 20px "Segoe UI", sans-serif';
+        ctx.fillText((identitas.namaApp || 'KASIR BAROKAH').toUpperCase(), 40, 44);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 31px "Segoe UI", sans-serif';
+        ctx.fillText('DATA SANTRI', 40, 82);
+
+        // Data santri (kolom kiri)
+        ctx.textAlign = 'left';
+        const baris = [
+            ['Nama', s.nama],
+            ['NIS', String(s.nis)],
+            ['Kelas', s.kelas || '-'],
+            ['Wali / Orang Tua', s.orangTua || '-']
+        ];
+        let y = 172;
+        baris.forEach(([lbl, val]) => {
+            ctx.fillStyle = '#8A7A5C';
+            ctx.font = '16px "Segoe UI", sans-serif';
+            ctx.fillText(lbl.toUpperCase(), 40, y);
+            ctx.fillStyle = '#06392A';
+            ctx.font = 'bold 21px "Segoe UI", sans-serif';
+            ctx.fillText(String(val), 170, y + 2);
+            ctx.strokeStyle = '#E7D8B6';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, y + 12);
+            ctx.lineTo(360, y + 12);
+            ctx.stroke();
+            y += 52;
+        });
+
+        // QR link aplikasi wali (kolom kanan)
+        const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
+        const qx = 412, qy = 138, qsize = 186;
+        ctx.fillStyle = '#FFFFFF';
+        rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
+        ctx.fill();
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 2;
+        rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
+        ctx.stroke();
+
+        const tmp = document.createElement('div');
+        tmp.style.position = 'absolute';
+        tmp.style.left = '-9999px';
+        document.body.appendChild(tmp);
+        new QRCode(tmp, {
+            text: linkWali,
+            width: qsize, height: qsize,
+            colorDark: '#06392A', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+        const qrCv = tmp.querySelector('canvas');
+        if (qrCv) ctx.drawImage(qrCv, qx, qy);
+        document.body.removeChild(tmp);
+
+        ctx.fillStyle = '#A8871F';
+        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('APLIKASI WALI', qx + qsize / 2, qy + qsize + 28);
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.fillText('Scan QR untuk memantau saldo ananda', qx + qsize / 2, qy + qsize + 47);
+
+        // Kaki kartu
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(40, 362);
+        ctx.lineTo(600, 362);
+        ctx.stroke();
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '13px "Segoe UI", sans-serif';
+        const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
+        ctx.fillText(alamat || identitas.namaApp, 320, 388);
+        ctx.textAlign = 'left';
+
+        return cv;
+    }
+
+    function buatKartuGabungan(s) {
+        const depan = buatKartuDepan(s);
+        const belakang = buatKartuBelakang(s);
+        const W = 640, H = 400, G = 60;
+        const gab = document.createElement('canvas');
+        gab.width = W; gab.height = H * 2 + G;
+        const gctx = gab.getContext('2d');
+        gctx.fillStyle = '#FFFFFF';
+        gctx.fillRect(0, 0, gab.width, gab.height);
+        gctx.fillStyle = '#8A7A5C';
+        gctx.font = 'bold 16px "Segoe UI", sans-serif';
+        gctx.textAlign = 'center';
+        gctx.fillText('— KARTU DEPAN (Barcode) —', W / 2, 24);
+        gctx.drawImage(depan, 0, 30);
+        gctx.fillText('— KARTU BELAKANG (Data & QR Wali) —', W / 2, H + 30 + 24);
+        gctx.drawImage(belakang, 0, H + G);
+        return gab;
+    }
+
+    function buatKartuSantri(santriId) {
+        const s = santriList.find(x => x.id === santriId);
+        if (!s) return null;
+        return buatKartuDepan(s);
+    }
+
+    function cetakKartuSantri(santriId) {
+        const s = santriList.find(x => x.id === santriId);
+        if (!s) return;
+        const depan = buatKartuDepan(s);
+        const belakang = buatKartuBelakang(s);
+        const w = window.open('', '', 'width=720,height=520');
+        w.document.write(`<html><head><title>Kartu Santri ${s.nama}</title><style>
+            body{margin:0;text-align:center;padding:10px;font-family:Segoe UI,sans-serif;}
+            .kartu{margin:6px auto;border:1px dashed #bbb;padding:6px;display:inline-block;}
+            .lbl{font-weight:bold;font-size:13px;color:#555;margin:4px 0;}
+            img{display:block;}
+            @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
+        </style></head><body>
+            <div class="tombol" style="margin-bottom:10px;">
+                <button onclick="window.print()" style="padding:8px 18px;">Cetak</button>
+                <button onclick="window.close()" style="padding:8px 18px;">Tutup</button>
+                <p style="font-size:12px;color:#888;margin-top:6px;">Kartu Depan &amp; Belakang. Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
+            </div>
+            <div class="kartu"><div class="lbl">KARTU DEPAN (Barcode)</div><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
+            <div class="kartu"><div class="lbl">KARTU BELAKANG (Data &amp; QR Aplikasi Wali)</div><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
+        </body></html>`);
+        w.document.close();
+        w.focus();
+        setTimeout(() => { w.print(); }, 300);
+    }
+
+    function unduhKartuSantri(santriId) {
+        const s = santriList.find(x => x.id === santriId);
+        if (!s) return;
+        const gab = buatKartuGabungan(s);
+        const a = document.createElement('a');
+        a.href = gab.toDataURL('image/png');
+        a.download = `kartu_${s.nis}_${s.nama.replace(/\s+/g, '_')}_depan_belakang.png`;
+        a.click();
+        showToast('Kartu santri (depan & belakang) diunduh');
     }
 
     function renderBarcodeSantri() {
@@ -2504,29 +2672,8 @@
     document.getElementById('gridBarcode').addEventListener('click', e => {
         const cetakBtn = e.target.closest('.cetakBarcode');
         const unduhBtn = e.target.closest('.unduhBarcode');
-        if (cetakBtn) {
-            const id = parseInt(cetakBtn.dataset.id);
-            const cv = buatKartuSantri(id);
-            if (!cv) return;
-            const dataUrl = cv.toDataURL('image/png');
-            const w = window.open('', '', 'width=640,height=450');
-            w.document.write(`<html><head><title>Kartu Santri</title><style>body{margin:0;text-align:center;padding:10px;}</style></head><body><img src="${dataUrl}" width="480" height="300" style="max-width:100%;"></body></html>`);
-            w.document.close();
-            w.focus();
-            setTimeout(() => { w.print(); }, 300);
-        }
-        if (unduhBtn) {
-            const id = parseInt(unduhBtn.dataset.id);
-            const s = santriList.find(x => x.id === id);
-            if (!s) return;
-            const cv = buatKartuSantri(id);
-            if (!cv) return;
-            const a = document.createElement('a');
-            a.href = cv.toDataURL('image/png');
-            a.download = `kartu_${s.nis}_${s.nama.replace(/\s+/g, '_')}.png`;
-            a.click();
-            showToast('Kartu santri diunduh');
-        }
+        if (cetakBtn) cetakKartuSantri(parseInt(cetakBtn.dataset.id));
+        if (unduhBtn) unduhKartuSantri(parseInt(unduhBtn.dataset.id));
     });
 
     // QR modal (dari kartu santri)
@@ -2557,24 +2704,11 @@
     });
 
     document.getElementById('btnCetakQR').addEventListener('click', () => {
-        const cv = buatKartuSantri(qrSantriAktif);
-        if (!cv) return;
-        const w = window.open('', '', 'width=640,height=450');
-        w.document.write(`<html><head><title>Kartu Santri</title><style>body{margin:0;text-align:center;padding:10px;}</style></head><body><img src="${cv.toDataURL('image/png')}" width="480" height="300" style="max-width:100%;"></body></html>`);
-        w.document.close();
-        w.focus();
-        setTimeout(() => { w.print(); }, 300);
+        cetakKartuSantri(qrSantriAktif);
     });
 
     document.getElementById('btnUnduhQR').addEventListener('click', () => {
-        const s = santriList.find(x => x.id === qrSantriAktif);
-        const cv = buatKartuSantri(qrSantriAktif);
-        if (!cv) return;
-        const a = document.createElement('a');
-        a.href = cv.toDataURL('image/png');
-        a.download = `kartu_${s ? s.nis : ''}_${document.getElementById('qrNamaSantri').textContent.replace(/\s+/g, '_')}.png`;
-        a.click();
-        showToast('Kartu santri diunduh');
+        unduhKartuSantri(qrSantriAktif);
     });
 
     // ======================== PEMBAYARAN WALI ========================
@@ -2817,7 +2951,9 @@
         document.getElementById('modalScanner').classList.remove('hidden');
         document.getElementById('modalScanner').classList.add('flex');
         document.getElementById('scannerResult').textContent = 'Arahkan kamera ke barcode santri';
+        document.getElementById('hasilScanPanel').classList.add('hidden');
         document.getElementById('inputNisManual').value = '';
+        window.__scanSantri = null;
         mulaiScanner();
     });
 
@@ -2825,6 +2961,7 @@
         stopScanner();
         document.getElementById('modalScanner').classList.add('hidden');
         document.getElementById('modalScanner').classList.remove('flex');
+        window.__scanSantri = null;
     });
 
     function mulaiScanner() {
@@ -2836,9 +2973,6 @@
             { fps: 10, qrbox: { width: 250, height: 150 } },
             decodedText => {
                 handleScanResult(decodedText);
-                stopScanner();
-                document.getElementById('modalScanner').classList.add('hidden');
-                document.getElementById('modalScanner').classList.remove('flex');
             },
             () => {} // ignore errors
         ).catch(() => {
@@ -2853,27 +2987,44 @@
     }
 
     function handleScanResult(nis) {
-        nis = nis.trim();
-        const santri = santriList.find(s => s.nis === nis);
+        nis = String(nis || '').trim();
+        const santri = santriList.find(s => String(s.nis) === nis);
+        const panel = document.getElementById('hasilScanPanel');
         if (santri) {
-            // Auto-select santri di dropdown pembayaran
-            const sel = document.getElementById('santriBayar');
-            sel.value = santri.id;
-            sel.dispatchEvent(new Event('change'));
-            // Tutup modal bayar dulu, lalu tampilkan info
-            showToast(`✓ ${santri.nama} (NIS: ${santri.nis}) - Saldo: ${formatRp(santri.saldo)}`, 'fa-check-circle', 'text-green-400');
+            document.getElementById('hasilScanNama').textContent = santri.nama;
+            document.getElementById('hasilScanNis').textContent = 'NIS: ' + santri.nis;
+            document.getElementById('hasilScanKelas').textContent = 'Kelas: ' + (santri.kelas || '-') + (santri.orangTua ? ' • Wali: ' + santri.orangTua : '');
+            const saldoEl = document.getElementById('hasilScanSaldo');
+            saldoEl.textContent = 'Saldo: ' + formatRp(santri.saldo);
+            saldoEl.className = 'text-xs font-bold ' + (santri.saldo > 0 ? 'text-green-600' : 'text-stone-400');
+            document.getElementById('hasilScanAvatar').textContent = (santri.nama || 'S').charAt(0).toUpperCase();
+            panel.classList.remove('hidden');
+            document.getElementById('scannerResult').textContent = '';
+            window.__scanSantri = santri;
         } else {
-            showToast('Santri dengan NIS ' + nis + ' tidak ditemukan!', 'fa-times-circle', 'text-red-400');
+            panel.classList.add('hidden');
+            window.__scanSantri = null;
+            document.getElementById('scannerResult').innerHTML = '<span class="text-red-500">Santri dengan NIS ' + nis + ' tidak ditemukan!</span>';
         }
     }
+
+    document.getElementById('btnPilihHasilScan').addEventListener('click', () => {
+        const santri = window.__scanSantri;
+        if (!santri) return;
+        const sel = document.getElementById('santriBayar');
+        sel.value = santri.id;
+        sel.dispatchEvent(new Event('change'));
+        stopScanner();
+        document.getElementById('modalScanner').classList.add('hidden');
+        document.getElementById('modalScanner').classList.remove('flex');
+        window.__scanSantri = null;
+        showToast(`✓ ${santri.nama} (NIS: ${santri.nis}) - Saldo: ${formatRp(santri.saldo)}`, 'fa-check-circle', 'text-green-400');
+    });
 
     document.getElementById('btnNisManual').addEventListener('click', () => {
         const nis = document.getElementById('inputNisManual').value.trim();
         if (!nis) return;
         handleScanResult(nis);
-        stopScanner();
-        document.getElementById('modalScanner').classList.add('hidden');
-        document.getElementById('modalScanner').classList.remove('flex');
     });
 
     document.getElementById('inputNisManual').addEventListener('keydown', e => {
@@ -3048,11 +3199,13 @@
     });
 
     // ======================== PENGATURAN / ADMIN ========================
+    let adminUsername = DB.get('admin_user', 'admin');
     let adminPassword = DB.get('admin_pass', 'admin123');
     let identitas = DB.get('identitas', {
         namaApp: 'KASIR BAROKAH', alamat: 'Jl. Masjid Al-Barokah No. 1',
         telepon: '0812-3456-7890', kota: '', logo: '',
         bank: 'Bank Syariah Indonesia', noRek: '1234-5678-9012', atasNama: 'Koperasi Barokah',
+        linkWali: '',
         sholat: {
             aktif: true, suara: true, overlay: true, audioUrl: '',
             times: { subuh: '04:30', dzuhur: '12:00', ashar: '15:00', maghrib: '17:45', isya: '19:00' }
@@ -3078,8 +3231,9 @@
 
     // Login admin
     document.getElementById('btnLoginAdmin').addEventListener('click', () => {
+        const user = document.getElementById('inputAdminUser').value.trim();
         const pass = document.getElementById('inputAdminPass').value;
-        if (pass === adminPassword) {
+        if (user === adminUsername && pass === adminPassword) {
             document.getElementById('adminLock').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
             document.getElementById('setNamaApp').value = identitas.namaApp;
@@ -3089,6 +3243,8 @@
             document.getElementById('setBank').value = identitas.bank || '';
             document.getElementById('setNoRek').value = identitas.noRek || '';
             document.getElementById('setAtasNama').value = identitas.atasNama || '';
+            document.getElementById('setLinkWali').value = identitas.linkWali || '';
+            document.getElementById('setUsername').value = '';
             const sc = sholatConf();
             document.getElementById('setSholatSubuh').value = sc.times.subuh;
             document.getElementById('setSholatDzuhur').value = sc.times.dzuhur;
@@ -3105,7 +3261,7 @@
                 document.getElementById('logoPlaceholder').classList.add('hidden');
             }
         } else {
-            showToast('Password salah!', 'fa-times-circle', 'text-red-400');
+            showToast('Username atau password salah!', 'fa-times-circle', 'text-red-400');
         }
     });
     document.getElementById('inputAdminPass').addEventListener('keydown', e => {
@@ -3115,6 +3271,7 @@
     document.getElementById('btnLogoutAdmin').addEventListener('click', () => {
         document.getElementById('adminPanel').classList.add('hidden');
         document.getElementById('adminLock').classList.remove('hidden');
+        document.getElementById('inputAdminUser').value = '';
         document.getElementById('inputAdminPass').value = '';
     });
 
@@ -3155,6 +3312,7 @@
         identitas.bank = document.getElementById('setBank').value.trim();
         identitas.noRek = document.getElementById('setNoRek').value.trim();
         identitas.atasNama = document.getElementById('setAtasNama').value.trim();
+        identitas.linkWali = document.getElementById('setLinkWali').value.trim();
         DB.set('identitas', identitas);
         terapkanIdentitas();
         showToast('Identitas aplikasi disimpan!');
@@ -3183,26 +3341,38 @@
         mainkanAdzan();
     });
 
-    // Ubah password
+    // Ubah username & password
     document.getElementById('btnUbahPass').addEventListener('click', () => {
         const lama = document.getElementById('setPassLama').value;
         const baru = document.getElementById('setPassBaru').value;
         const konfirm = document.getElementById('setPassKonfirm').value;
+        const userBaru = document.getElementById('setUsername').value.trim();
         if (lama !== adminPassword) { showToast('Password lama salah!', 'fa-times-circle', 'text-red-400'); return; }
-        if (!baru || baru.length < 4) { showToast('Password baru minimal 4 karakter!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-        if (baru !== konfirm) { showToast('Konfirmasi password tidak cocok!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-        adminPassword = baru;
-        DB.set('admin_pass', adminPassword);
+        let adaPerubahan = false;
+        if (userBaru && userBaru !== adminUsername) {
+            adminUsername = userBaru;
+            DB.set('admin_user', adminUsername);
+            adaPerubahan = true;
+        }
+        if (baru) {
+            if (baru.length < 4) { showToast('Password baru minimal 4 karakter!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+            if (baru !== konfirm) { showToast('Konfirmasi password tidak cocok!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+            adminPassword = baru;
+            DB.set('admin_pass', adminPassword);
+            adaPerubahan = true;
+        }
+        if (!adaPerubahan) { showToast('Tidak ada perubahan!', 'fa-info-circle', 'text-stone-400'); return; }
+        showToast('Akun admin diperbarui!');
         document.getElementById('setPassLama').value = '';
         document.getElementById('setPassBaru').value = '';
         document.getElementById('setPassKonfirm').value = '';
-        showToast('Password admin berhasil diubah!');
+        document.getElementById('setUsername').value = '';
     });
 
     // Backup
     document.getElementById('btnBackup').addEventListener('click', () => {
         const data = {
-            identitas, adminPassword,
+            identitas, adminUsername, adminPassword,
             produk: produkList, santri: santriList,
             riwayatTabungan, riwayatPenjualan, pembayaranWali,
             exportDate: tglFull()
@@ -3242,13 +3412,14 @@
     document.getElementById('btnKeluar').addEventListener('click', () => {
         if (!confirm('Keluar dari aplikasi kasir?')) return;
         try { localStorage.removeItem('barokah_lock'); } catch {}
+        document.getElementById('lockUsername').value = '';
         document.getElementById('lockPassword').value = '';
         document.getElementById('lockPesan').classList.add('hidden');
         const lock = document.getElementById('lockApp');
         lock.classList.remove('hidden');
         lock.classList.add('flex');
         showToast('Terima kasih! Barakallah.', 'fa-sign-out-alt', 'text-blue-400');
-        setTimeout(() => document.getElementById('lockPassword').focus(), 100);
+        setTimeout(() => document.getElementById('lockUsername').focus(), 100);
     });
 
     // ======================== START ONLINE SYNC ========================
@@ -3259,14 +3430,16 @@
         document.getElementById('lockApp').classList.add('hidden');
     }
     function verifLock() {
+        const u = document.getElementById('lockUsername').value.trim();
         const p = document.getElementById('lockPassword').value;
-        if (p === adminPassword) {
+        if (u === adminUsername && p === adminPassword) {
             try { localStorage.setItem('barokah_lock', JSON.stringify(Date.now())); } catch {}
             bukaLock();
+            document.getElementById('lockUsername').value = '';
             document.getElementById('lockPassword').value = '';
         } else {
             const el = document.getElementById('lockPesan');
-            el.textContent = 'Password salah!';
+            el.textContent = 'Username atau password salah!';
             el.classList.remove('hidden');
         }
     }
@@ -3277,7 +3450,7 @@
             const t = JSON.parse(localStorage.getItem('barokah_lock'));
             if (t && (Date.now() - t) < 7 * 24 * 3600 * 1000) { bukaLock(); return; }
         } catch {}
-        setTimeout(() => document.getElementById('lockPassword').focus(), 100);
+        setTimeout(() => document.getElementById('lockUsername').focus(), 100);
     })();
 
     // Daftarkan service worker (agar bisa dipasang sebagai aplikasi Android/PWA)

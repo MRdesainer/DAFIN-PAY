@@ -82,8 +82,9 @@
     <div id="modalKasir" class="hidden fixed inset-0 z-50 bg-black/50 items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-xl shadow-islami p-5">
             <h2 class="font-bold text-primary text-lg"><i class="fas fa-lock mr-2"></i>Masuk Aplikasi Kasir</h2>
-            <p class="text-xs text-stone-500 mt-1">Aplikasi kasir dilindungi password. Masukkan password admin untuk lanjut.</p>
-            <input id="pinKasir" type="password" placeholder="Password admin" class="w-full border rounded-lg py-2 px-3 text-sm mt-3 focus:ring-2 focus:ring-primary focus:border-primary">
+            <p class="text-xs text-stone-500 mt-1">Aplikasi kasir dilindungi username & password admin.</p>
+            <input id="pinKasir" type="text" placeholder="Username admin" class="w-full border rounded-lg py-2 px-3 text-sm mt-3 focus:ring-2 focus:ring-primary focus:border-primary">
+            <input id="pinKasirPass" type="password" placeholder="Password admin" class="w-full border rounded-lg py-2 px-3 text-sm mt-2 focus:ring-2 focus:ring-primary focus:border-primary">
             <p id="pesanPinKasir" class="text-xs text-red-500 mt-2 hidden"></p>
             <div class="flex gap-2 mt-4">
                 <button id="btnBatalKasir" class="flex-1 bg-stone-200 text-stone-600 py-2 rounded-lg font-semibold hover:bg-stone-300 transition">Batal</button>
@@ -96,11 +97,15 @@
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
     </script>
     <script>
+    let kasirUser = 'admin';
     let kasirPass = 'admin123';
     const cfg = window.FIREBASE_CONFIG || {};
     if (cfg.apiKey && cfg.apiKey.indexOf('PASTE') === -1) {
         try {
             const app = firebase.initializeApp(cfg);
+            firebase.database(app).ref('barokah/admin_user').on('value', snap => {
+                if (snap.val()) kasirUser = String(snap.val());
+            }, () => {});
             firebase.database(app).ref('barokah/admin_pass').on('value', snap => {
                 if (snap.val()) kasirPass = String(snap.val());
             }, () => {});
@@ -126,19 +131,20 @@
         $id('modalKasir').classList.add('hidden');
         $id('modalKasir').classList.remove('flex');
         $id('pinKasir').value = '';
+        $id('pinKasirPass').value = '';
     }
     function cekKasir() {
-        if ($id('pinKasir').value === kasirPass) {
+        if ($id('pinKasir').value.trim() === kasirUser && $id('pinKasirPass').value === kasirPass) {
             location.href = 'kasir.html';
         } else {
-            $id('pesanPinKasir').textContent = 'Password salah!';
+            $id('pesanPinKasir').textContent = 'Username atau password salah!';
             $id('pesanPinKasir').classList.remove('hidden');
         }
     }
     $id('btnKasir').addEventListener('click', bukaKasir);
     $id('btnBatalKasir').addEventListener('click', tutupKasir);
     $id('btnMasukKasir').addEventListener('click', cekKasir);
-    $id('pinKasir').addEventListener('keydown', e => { if (e.key === 'Enter') cekKasir(); });
+    $id('pinKasirPass').addEventListener('keydown', e => { if (e.key === 'Enter') cekKasir(); });
     </script>
 </body>
 </html>
