@@ -3078,7 +3078,7 @@
 
         // Data santri (kolom kanan) — semua data penting santri
         ctx.textAlign = 'left';
-        const dx = 430, maxW = W - 50 - dx;
+        const dx = 310, maxW = 640;
         const jkTeks = s.jk === 'P' ? 'Perempuan' : 'Laki-laki';
         const baris = [
             ['Nama Santri', s.nama, 21],
@@ -3089,7 +3089,7 @@
             ['Wali', s.orangTua || '-', 17],
             ['Tahun Masuk', s.tahunMasuk || '-', 17]
         ];
-        let y = 222;
+        let y = 200;
         baris.forEach(([lbl, val, fs], i) => {
             ctx.fillStyle = '#8A7A5C';
             ctx.font = 'bold 13px "Segoe UI", sans-serif';
@@ -3105,11 +3105,11 @@
                 ctx.lineTo(W - 50, y + 42);
                 ctx.stroke();
             }
-            y += 54;
+            y += 44;
         });
 
-        // QR NIS + nama di sebelah kanan pas foto (gaya seperti kartu belakang)
-        const qsize = 140, qx = 262, qy = 266;
+        // QR NIS + nama di pojok kanan bawah (gaya seperti kartu belakang)
+        const qsize = 120, qx = W - 50 - qsize - 8, qy = 492;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -3134,11 +3134,8 @@
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 13px "Segoe UI", sans-serif';
+        ctx.font = 'bold 10px "Segoe UI", sans-serif';
         ctx.fillText('SCAN UNTUK BELANJA', qx + qsize / 2, qy + qsize + 20);
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '10px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, 'NIS ' + s.nis + ' • ' + s.nama, qsize + 10), qx + qsize / 2, qy + qsize + 36);
         ctx.textAlign = 'left';
 
         ctx.textAlign = 'left';
