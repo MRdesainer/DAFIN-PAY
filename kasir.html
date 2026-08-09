@@ -759,7 +759,21 @@
                             </div>
                         </div>
                     </div>
-                    <p class="text-xs text-stone-400 mt-2">Format: JPG, PNG. Maks 2MB per gambar. Disarankan gambar lebar (landscape), mis. 1280×200 px, agar pas di kepala kartu.</p>
+                    <div class="mt-4 border-t border-pasirTua pt-3">
+                        <p class="text-sm font-semibold text-primary mb-1"><i class="fas fa-heading mr-1"></i>Teks Judul Kepala Kartu</p>
+                        <p class="text-[11px] text-stone-400 mb-2">Dipakai bila kop (gambar) di atas kosong. Boleh diubah bebas oleh admin.</p>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-stone-600 font-medium">Judul Kartu Depan</label>
+                                <input type="text" id="setJudulKartu" placeholder="KARTU TANDA SANTRI" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="text-sm text-stone-600 font-medium">Judul Kartu Belakang</label>
+                                <input type="text" id="setJudulKartuB" placeholder="SCAN UNTUK BELANJA" class="w-full border rounded-lg py-2 px-3 text-sm mt-1 focus:ring-2 focus:ring-primary">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-stone-400 mt-2">Format kop: JPG, PNG. Maks 2MB per gambar. Disarankan gambar lebar (landscape), mis. 1280×200 px, agar pas di kepala kartu.</p>
                 </div>
 
                 <!-- Jadwal Sholat & Pengingat -->
@@ -1166,12 +1180,27 @@
                     <input type="text" id="inputNamaSantri" placeholder="Nama santri" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
                 </div>
                 <div>
-                    <label class="text-sm text-stone-600">Kelas / Tingkatan</label>
-                    <input type="text" id="inputKelasSantri" placeholder="Contoh: VII-A" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                    <label class="text-sm text-stone-600">Tempat, Tanggal Lahir (TTL)</label>
+                    <input type="text" id="inputTtl" placeholder="Contoh: Bandung, 12-03-2011" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
                 </div>
                 <div>
-                    <label class="text-sm text-stone-600">Nama Orang Tua</label>
+                    <label class="text-sm text-stone-600">Jenis Kelamin</label>
+                    <select id="inputJk" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm text-stone-600">Kamar / Kelas</label>
+                    <input type="text" id="inputKelasSantri" placeholder="Contoh: VII-A / Kamar Ar-Rahman" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-sm text-stone-600">Nama Orang Tua (Wali)</label>
                     <input type="text" id="inputOrangTua" placeholder="Nama orang tua / wali" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-sm text-stone-600">Tahun Masuk</label>
+                    <input type="text" id="inputTahunMasuk" placeholder="Contoh: 2022" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
                 </div>
                 <div>
                     <label class="text-sm text-stone-600">No. HP Orang Tua</label>
@@ -1418,11 +1447,11 @@
     ]);
 
     let santriList = DB.get('santri', [
-        { id: 1, nis: '001', nama: 'Ahmad Fauzi', kelas: 'VII-A', orangTua: 'Budi Fauzi', hp: '081234567801', saldo: 50000 },
-        { id: 2, nis: '002', nama: 'Fatimah Azzahra', kelas: 'VIII-B', orangTua: 'Siti Azzahra', hp: '081234567802', saldo: 75000 },
-        { id: 3, nis: '003', nama: 'Muhammad Rizki', kelas: 'IX-A', orangTua: 'Ahmad Rizki', hp: '081234567803', saldo: 120000 },
-        { id: 4, nis: '004', nama: 'Aisyah Putri', kelas: 'VII-B', orangTua: 'Hendra Putri', hp: '081234567804', saldo: 30000 },
-        { id: 5, nis: '005', nama: 'Usamah bin Zaid', kelas: 'VIII-A', orangTua: 'Zaid bin Tsabit', hp: '081234567805', saldo: 95000 }
+        { id: 1, nis: '001', nama: 'Ahmad Fauzi', ttl: 'Bandung, 12-03-2011', jk: 'L', kelas: 'Kamar Ar-Rahman', orangTua: 'Budi Fauzi', hp: '081234567801', tahunMasuk: '2022', saldo: 50000 },
+        { id: 2, nis: '002', nama: 'Fatimah Azzahra', ttl: 'Jakarta, 05-07-2010', jk: 'P', kelas: 'Kamar Al-Madinah', orangTua: 'Siti Azzahra', hp: '081234567802', tahunMasuk: '2021', saldo: 75000 },
+        { id: 3, nis: '003', nama: 'Muhammad Rizki', ttl: 'Bogor, 20-01-2011', jk: 'L', kelas: 'Kamar Al-Aqsha', orangTua: 'Ahmad Rizki', hp: '081234567803', tahunMasuk: '2022', saldo: 120000 },
+        { id: 4, nis: '004', nama: 'Aisyah Putri', ttl: 'Depok, 15-09-2010', jk: 'P', kelas: 'Kamar As-Salam', orangTua: 'Hendra Putri', hp: '081234567804', tahunMasuk: '2021', saldo: 30000 },
+        { id: 5, nis: '005', nama: 'Usamah bin Zaid', ttl: 'Cirebon, 03-12-2012', jk: 'L', kelas: 'Kamar Al-Furqan', orangTua: 'Zaid bin Tsabit', hp: '081234567805', tahunMasuk: '2023', saldo: 95000 }
     ]);
 
     let riwayatTabungan = DB.get('riwayat_tabungan', []);
@@ -2428,8 +2457,11 @@
                 document.getElementById('editSantriId').value = s.id;
                 document.getElementById('inputNis').value = s.nis;
                 document.getElementById('inputNamaSantri').value = s.nama;
+                document.getElementById('inputTtl').value = s.ttl || '';
+                document.getElementById('inputJk').value = s.jk || 'L';
                 document.getElementById('inputKelasSantri').value = s.kelas;
                 document.getElementById('inputOrangTua').value = s.orangTua;
+                document.getElementById('inputTahunMasuk').value = s.tahunMasuk || '';
                 document.getElementById('inputHpOrangTua').value = s.hp;
                 document.getElementById('hapusFotoSantri').value = '0';
                 document.getElementById('previewFotoSantri').src = s.foto || FOTO_EMPTY;
@@ -2456,8 +2488,11 @@
         document.getElementById('editSantriId').value = '';
         document.getElementById('inputNis').value = '';
         document.getElementById('inputNamaSantri').value = '';
+        document.getElementById('inputTtl').value = '';
+        document.getElementById('inputJk').value = 'L';
         document.getElementById('inputKelasSantri').value = '';
         document.getElementById('inputOrangTua').value = '';
+        document.getElementById('inputTahunMasuk').value = '';
         document.getElementById('inputHpOrangTua').value = '';
         document.getElementById('hapusFotoSantri').value = '0';
         document.getElementById('previewFotoSantri').src = FOTO_EMPTY;
@@ -2523,8 +2558,11 @@
         const editId = document.getElementById('editSantriId').value;
         const nis = document.getElementById('inputNis').value.trim();
         const nama = document.getElementById('inputNamaSantri').value.trim();
+        const ttl = document.getElementById('inputTtl').value.trim();
+        const jk = document.getElementById('inputJk').value;
         const kelas = document.getElementById('inputKelasSantri').value.trim();
         const ortu = document.getElementById('inputOrangTua').value.trim();
+        const tahunMasuk = document.getElementById('inputTahunMasuk').value.trim();
         const hp = document.getElementById('inputHpOrangTua').value.trim();
 
         if (!nis || !nama) { showToast('NIS dan Nama wajib diisi!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
@@ -2543,9 +2581,9 @@
         let dataSantri = null;
         if (editId) {
             dataSantri = santriList.find(x => x.id === parseInt(editId));
-            if (dataSantri) { dataSantri.nis = nis; dataSantri.nama = nama; dataSantri.kelas = kelas; dataSantri.orangTua = ortu; dataSantri.hp = hp; dataSantri.foto = foto; }
+            if (dataSantri) { dataSantri.nis = nis; dataSantri.nama = nama; dataSantri.ttl = ttl; dataSantri.jk = jk; dataSantri.kelas = kelas; dataSantri.orangTua = ortu; dataSantri.tahunMasuk = tahunMasuk; dataSantri.hp = hp; dataSantri.foto = foto; }
         } else {
-            dataSantri = { id: Date.now(), nis, nama, kelas, orangTua: ortu, hp, foto, saldo: 0 };
+            dataSantri = { id: Date.now(), nis, nama, ttl, jk, kelas, orangTua: ortu, tahunMasuk, hp, foto, saldo: 0 };
             santriList.push(dataSantri);
         }
         simpanLokal('santri');
@@ -3020,12 +3058,12 @@
             ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 88);
             ctx.fillStyle = '#FFFFFF';
             ctx.font = 'bold 30px "Segoe UI", sans-serif';
-            ctx.fillText('KARTU TANDA SANTRI', W / 2, 144);
+            ctx.fillText(identitas.judulKartu || 'KARTU TANDA SANTRI', W / 2, 144);
             ctx.textAlign = 'left';
         }
 
         // Pas foto santri (kiri, berbingkai emas)
-        const fx = 70, fy = 340, fw = 180, fh = 230;
+        const fx = 70, fy = 260, fw = 180, fh = 310;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, fx - 8, fy - 8, fw + 16, fh + 16, 16);
         ctx.fill();
@@ -3038,33 +3076,36 @@
         gambarRoundedFoto(ctx, dapatFotoSantri(s.id), fx, fy, fw, fh, 12);
         ctx.restore();
 
-        // Data santri (kolom kanan) — nilai dibungkus agar tidak menutupi foto
+        // Data santri (kolom kanan) — semua data penting santri
         ctx.textAlign = 'left';
-        const dx = 310, maxW = 620;
+        const dx = 310, maxW = 640;
+        const jkTeks = s.jk === 'P' ? 'Perempuan' : 'Laki-laki';
         const baris = [
-            ['Nama', s.nama, 27],
-            ['NIS', String(s.nis), 22],
-            ['Kelas', s.kelas || '-', 22],
-            ['Wali', s.orangTua || '-', 18]
+            ['Nama', s.nama, 21],
+            ['NIS', String(s.nis), 17],
+            ['TTL', s.ttl || '-', 17],
+            ['Jenis Kelamin', jkTeks, 17],
+            ['Kamar / Kelas', s.kelas || '-', 17],
+            ['Wali', s.orangTua || '-', 17],
+            ['Tahun Masuk', s.tahunMasuk || '-', 17]
         ];
-        let y = 350;
+        let y = 222;
         baris.forEach(([lbl, val, fs], i) => {
             ctx.fillStyle = '#8A7A5C';
-            ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.font = 'bold 13px "Segoe UI", sans-serif';
             ctx.fillText(lbl.toUpperCase(), dx, y);
             ctx.fillStyle = '#06392A';
             ctx.font = 'bold ' + fs + 'px "Segoe UI", sans-serif';
-            const barisVal = fs === 18 ? bungkusTeks(ctx, String(val), maxW).slice(0, 2) : [potongTeks(ctx, String(val), maxW)];
-            barisVal.forEach((ln, j) => ctx.fillText(ln, dx, y + 30 + j * (fs + 5)));
+            ctx.fillText(potongTeks(ctx, String(val), maxW), dx, y + 23);
             if (i < baris.length - 1) {
                 ctx.strokeStyle = '#E7D8B6';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(dx, y + 52);
-                ctx.lineTo(W - 50, y + 52);
+                ctx.moveTo(dx, y + 42);
+                ctx.lineTo(W - 50, y + 42);
                 ctx.stroke();
             }
-            y += 65;
+            y += 54;
         });
 
         ctx.textAlign = 'left';
@@ -3103,7 +3144,7 @@
             ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 88);
             ctx.fillStyle = '#FFFFFF';
             ctx.font = 'bold 30px "Segoe UI", sans-serif';
-            ctx.fillText('SCAN UNTUK BELANJA', W / 2, 144);
+            ctx.fillText(identitas.judulKartuBelakang || 'SCAN UNTUK BELANJA', W / 2, 144);
             ctx.textAlign = 'left';
         }
 
@@ -3977,6 +4018,7 @@
         telepon: '0812-3456-7890', kota: '', logo: '', kop: '', kopBelakang: '',
         bank: 'Bank Syariah Indonesia', noRek: '1234-5678-9012', atasNama: 'Koperasi Dafin',
         linkWali: '',
+        judulKartu: 'KARTU TANDA SANTRI', judulKartuBelakang: 'SCAN UNTUK BELANJA',
         sholat: {
             aktif: true, suara: true, overlay: true, audioUrl: '',
             times: { subuh: '04:30', dzuhur: '12:00', ashar: '15:00', maghrib: '17:45', isya: '19:00' }
@@ -4014,6 +4056,8 @@
             document.getElementById('setKota').value = identitas.kota;
             renderEditorRekening();
             document.getElementById('setLinkWali').value = identitas.linkWali || '';
+            document.getElementById('setJudulKartu').value = identitas.judulKartu || 'KARTU TANDA SANTRI';
+            document.getElementById('setJudulKartuB').value = identitas.judulKartuBelakang || 'SCAN UNTUK BELANJA';
             document.getElementById('setUsername').value = '';
             const sc = sholatConf();
             document.getElementById('setSholatSubuh').value = sc.times.subuh;
@@ -4124,6 +4168,16 @@
     pasangKopUpload({ field: 'kop', input: 'inputKop', btnPilih: 'btnPilihKop', btnHapus: 'btnHapusKop', img: 'previewKopImg', ph: 'kopPlaceholder' });
     pasangKopUpload({ field: 'kopBelakang', input: 'inputKopB', btnPilih: 'btnPilihKopB', btnHapus: 'btnHapusKopB', img: 'previewKopImgB', ph: 'kopPlaceholderB' });
 
+    // Teks judul kepala kartu — disimpan otomatis saat diubah admin
+    function simpanJudulKartuField(sel, key, def) {
+        document.getElementById(sel).addEventListener('input', () => {
+            identitas[key] = document.getElementById(sel).value.trim() || def;
+            DB.set('identitas', identitas);
+        });
+    }
+    simpanJudulKartuField('setJudulKartu', 'judulKartu', 'KARTU TANDA SANTRI');
+    simpanJudulKartuField('setJudulKartuB', 'judulKartuBelakang', 'SCAN UNTUK BELANJA');
+
     // Simpan identitas
     document.getElementById('btnSimpanIdentitas').addEventListener('click', () => {
         identitas.namaApp = document.getElementById('setNamaApp').value.trim() || 'DAFIN-PAY';
@@ -4144,6 +4198,8 @@
             identitas.atasNama = rekenings[0].atasNama;
         }
         identitas.linkWali = document.getElementById('setLinkWali').value.trim();
+        identitas.judulKartu = document.getElementById('setJudulKartu').value.trim() || 'KARTU TANDA SANTRI';
+        identitas.judulKartuBelakang = document.getElementById('setJudulKartuB').value.trim() || 'SCAN UNTUK BELANJA';
         DB.set('identitas', identitas);
         terapkanIdentitas();
         showToast('Identitas aplikasi disimpan!');
