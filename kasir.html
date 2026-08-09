@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -3026,28 +3025,6 @@
         } catch (e) {}
     }
 
-    function gambarBarcodeDepan(ctx, x, y, maxW, maxH, nis, nama) {
-        if (typeof JsBarcode === 'undefined') return;
-        try {
-            const bc = document.createElement('canvas');
-            new JsBarcode(bc, String(nis) + ' ' + nama, {
-                format: 'CODE128',
-                width: 2,
-                height: 30,
-                displayValue: false,
-                background: '#ffffff',
-                lineColor: '#06392A',
-                margin: 2
-            });
-            let w = bc.width, h = bc.height;
-            if (w > maxW || h > maxH) {
-                const r = Math.min(maxW / w, maxH / h);
-                w = Math.round(w * r); h = Math.round(h * r);
-            }
-            ctx.drawImage(bc, x + (maxW - w) / 2, y, w, h);
-        } catch (e) {}
-    }
-
     function buatKartuDepan(s) {
         const W = 1011, H = 638, HEAD = 180;
         const cv = document.createElement('canvas');
@@ -3101,7 +3078,7 @@
 
         // Data santri (kolom kanan) — semua data penting santri
         ctx.textAlign = 'left';
-        const dx = 310, maxW = 640;
+        const dx = 430, maxW = W - 50 - dx;
         const jkTeks = s.jk === 'P' ? 'Perempuan' : 'Laki-laki';
         const baris = [
             ['Nama Santri', s.nama, 21],
@@ -3131,23 +3108,37 @@
             y += 54;
         });
 
-        // Barcode NIS + nama di bawah pas foto (gaya seperti kartu belakang)
-        const bx = 55, by = 574, bw = 210, bh = 60;
+        // QR NIS + nama di sebelah kanan pas foto (gaya seperti kartu belakang)
+        const qsize = 140, qx = 262, qy = 266;
         ctx.fillStyle = '#FFFFFF';
-        rrPath(ctx, bx, by, bw, bh, 10);
+        rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
         ctx.strokeStyle = '#E7D8B6';
         ctx.lineWidth = 2;
-        rrPath(ctx, bx, by, bw, bh, 10);
+        rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.stroke();
-        gambarBarcodeDepan(ctx, bx + 8, by + 7, bw - 16, 34, s.nis, s.nama);
+
+        const tmp = document.createElement('div');
+        tmp.style.position = 'absolute';
+        tmp.style.left = '-9999px';
+        document.body.appendChild(tmp);
+        new QRCode(tmp, {
+            text: String(s.nis) + ' ' + s.nama,
+            width: qsize, height: qsize,
+            colorDark: '#06392A', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+        const qrCv = tmp.querySelector('canvas');
+        if (qrCv) ctx.drawImage(qrCv, qx, qy);
+        document.body.removeChild(tmp);
+
         ctx.textAlign = 'center';
         ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 11px "Segoe UI", sans-serif';
-        ctx.fillText('SCAN UNTUK BELANJA', bx + bw / 2, by + 50);
+        ctx.font = 'bold 13px "Segoe UI", sans-serif';
+        ctx.fillText('SCAN UNTUK BELANJA', qx + qsize / 2, qy + qsize + 20);
         ctx.fillStyle = '#8A7A5C';
-        ctx.font = '9px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, 'NIS ' + s.nis + ' • ' + s.nama, bw - 12), bx + bw / 2, by + 59);
+        ctx.font = '10px "Segoe UI", sans-serif';
+        ctx.fillText(potongTeks(ctx, 'NIS ' + s.nis + ' • ' + s.nama, qsize + 10), qx + qsize / 2, qy + qsize + 36);
         ctx.textAlign = 'left';
 
         ctx.textAlign = 'left';
@@ -3820,7 +3811,11 @@
             showToast(ada ? 'Kode sudah terisi (barang sudah ada): ' + kode : 'Kode barang: ' + kode, 'fa-barcode', 'text-green-400');
             return;
         }
-        const santri = santriList.find(s => String(s.nis) === kode);
+        let santri = santriList.find(s => String(s.nis) === kode);
+        if (!santri) {
+            const token = String(kode).split(/[^0-9A-Za-z]/)[0];
+            if (token && token !== kode) santri = santriList.find(s => String(s.nis) === token);
+        }
         const panel = document.getElementById('hasilScanPanel');
         if (santri) {
             document.getElementById('hasilScanNama').textContent = santri.nama;
