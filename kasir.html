@@ -2882,14 +2882,14 @@
         muatKopKe(kopImgB, identitas.kopBelakang);
     }
 
-    // Gambar kop sebagai kepala kartu (cover-crop). Mengembalikan true bila kop berhasil digambar.
+    // Gambar kop sebagai kepala kartu (contain: tampil utuh & terkunci rasio). Mengembalikan true bila kop berhasil digambar.
     function gambarKopKartu(ctx, W, H, img) {
         if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return false;
         ctx.save();
         rrPath(ctx, 0, 0, W, H, 24);
         ctx.clip();
         const iw = img.naturalWidth, ih = img.naturalHeight;
-        const scale = Math.max(W / iw, H / ih);
+        const scale = Math.min(W / iw, H / ih);
         const dw = iw * scale, dh = ih * scale;
         ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
         ctx.restore();
@@ -2988,7 +2988,7 @@
     }
 
     function buatKartuDepan(s) {
-        const W = 640, H = 400;
+        const W = 1011, H = 638, HEAD = 300;
         const cv = document.createElement('canvas');
         cv.width = W; cv.height = H;
         const ctx = cv.getContext('2d');
@@ -3003,34 +3003,35 @@
         grad.addColorStop(0, '#0B6B4F');
         grad.addColorStop(1, '#06392A');
         ctx.fillStyle = grad;
-        rrPath(ctx, 0, 0, W, 100, 24);
+        rrPath(ctx, 0, 0, W, HEAD, 24);
         ctx.fill();
-        ctx.fillRect(0, 50, W, 50);
+        ctx.fillRect(0, HEAD / 2, W, HEAD / 2);
 
         // Garis emas
         ctx.fillStyle = '#C9A227';
-        ctx.fillRect(0, 100, W, 6);
+        ctx.fillRect(0, HEAD, W, 6);
 
         // Kepala kartu: jika kop pondok dipasang, gambar kop menggantikan teks bawaan.
-        const pakaiKop = gambarKopKartu(ctx, W, 100, kopImg);
+        const pakaiKop = gambarKopKartu(ctx, W, HEAD, kopImg);
         if (!pakaiKop) {
-            // Teks kepala kartu
+            ctx.textAlign = 'center';
             ctx.fillStyle = '#E8C25C';
-            ctx.font = 'bold 20px "Segoe UI", sans-serif';
-            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), 40, 44);
+            ctx.font = 'bold 22px "Segoe UI", sans-serif';
+            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 132);
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 31px "Segoe UI", sans-serif';
-            ctx.fillText('KARTU TANDA SANTRI', 40, 82);
+            ctx.font = 'bold 34px "Segoe UI", sans-serif';
+            ctx.fillText('KARTU TANDA SANTRI', W / 2, 196);
+            ctx.textAlign = 'left';
         }
 
         // Pas foto santri (kiri, berbingkai emas)
-        const fx = 40, fy = 128, fw = 152, fh = 192;
+        const fx = 70, fy = 345, fw = 180, fh = 230;
         ctx.fillStyle = '#FFFFFF';
-        rrPath(ctx, fx - 7, fy - 7, fw + 14, fh + 14, 16);
+        rrPath(ctx, fx - 8, fy - 8, fw + 16, fh + 16, 16);
         ctx.fill();
         ctx.strokeStyle = '#C9A227';
         ctx.lineWidth = 4;
-        rrPath(ctx, fx - 7, fy - 7, fw + 14, fh + 14, 16);
+        rrPath(ctx, fx - 8, fy - 8, fw + 16, fh + 16, 16);
         ctx.stroke();
 
         ctx.save();
@@ -3039,30 +3040,31 @@
 
         // Data santri (kolom kanan) — nilai dibungkus agar tidak menutupi foto
         ctx.textAlign = 'left';
+        const dx = 310, maxW = 620;
         const baris = [
-            ['Nama', s.nama, 23],
-            ['NIS', String(s.nis), 19],
-            ['Kelas', s.kelas || '-', 19],
-            ['Wali', s.orangTua || '-', 16]
+            ['Nama', s.nama, 27],
+            ['NIS', String(s.nis), 22],
+            ['Kelas', s.kelas || '-', 22],
+            ['Wali', s.orangTua || '-', 18]
         ];
-        let y = 146;
+        let y = 355;
         baris.forEach(([lbl, val, fs], i) => {
             ctx.fillStyle = '#8A7A5C';
-            ctx.font = '13px "Segoe UI", sans-serif';
-            ctx.fillText(lbl.toUpperCase(), 232, y);
+            ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText(lbl.toUpperCase(), dx, y);
             ctx.fillStyle = '#06392A';
             ctx.font = 'bold ' + fs + 'px "Segoe UI", sans-serif';
-            const barisVal = fs === 16 ? bungkusTeks(ctx, String(val), 352).slice(0, 2) : [potongTeks(ctx, String(val), 352)];
-            barisVal.forEach((ln, j) => ctx.fillText(ln, 232, y + 26 + j * (fs + 4)));
+            const barisVal = fs === 18 ? bungkusTeks(ctx, String(val), maxW).slice(0, 2) : [potongTeks(ctx, String(val), maxW)];
+            barisVal.forEach((ln, j) => ctx.fillText(ln, dx, y + 30 + j * (fs + 5)));
             if (i < baris.length - 1) {
                 ctx.strokeStyle = '#E7D8B6';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(232, y + 42);
-                ctx.lineTo(600, y + 42);
+                ctx.moveTo(dx, y + 52);
+                ctx.lineTo(W - 50, y + 52);
                 ctx.stroke();
             }
-            y += 58;
+            y += 65;
         });
 
         ctx.textAlign = 'left';
@@ -3071,7 +3073,7 @@
     }
 
     function buatKartuBelakang(s) {
-        const W = 640, H = 400;
+        const W = 1011, H = 638, HEAD = 300;
         const cv = document.createElement('canvas');
         cv.width = W; cv.height = H;
         const ctx = cv.getContext('2d');
@@ -3086,25 +3088,27 @@
         grad.addColorStop(0, '#0B6B4F');
         grad.addColorStop(1, '#06392A');
         ctx.fillStyle = grad;
-        rrPath(ctx, 0, 0, W, 100, 24);
+        rrPath(ctx, 0, 0, W, HEAD, 24);
         ctx.fill();
-        ctx.fillRect(0, 50, W, 50);
+        ctx.fillRect(0, HEAD / 2, W, HEAD / 2);
         ctx.fillStyle = '#C9A227';
-        ctx.fillRect(0, 100, W, 6);
+        ctx.fillRect(0, HEAD, W, 6);
 
         // Kepala kartu: jika kop pondok dipasang, gambar kop menggantikan teks bawaan.
-        const pakaiKop = gambarKopKartu(ctx, W, 100, kopImgB);
+        const pakaiKop = gambarKopKartu(ctx, W, HEAD, kopImgB);
         if (!pakaiKop) {
+            ctx.textAlign = 'center';
             ctx.fillStyle = '#E8C25C';
-            ctx.font = 'bold 20px "Segoe UI", sans-serif';
-            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), 40, 44);
+            ctx.font = 'bold 22px "Segoe UI", sans-serif';
+            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 132);
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 31px "Segoe UI", sans-serif';
-            ctx.fillText('SCAN UNTUK BELANJA', 40, 82);
+            ctx.font = 'bold 34px "Segoe UI", sans-serif';
+            ctx.fillText('SCAN UNTUK BELANJA', W / 2, 196);
+            ctx.textAlign = 'left';
         }
 
         // QR belanja besar (kiri) — isi NIS santri
-        const qsize = 200, qx = 44, qy = 122;
+        const qsize = 250, qx = 80, qy = 330;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -3129,33 +3133,33 @@
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 15px "Segoe UI", sans-serif';
+        ctx.font = 'bold 16px "Segoe UI", sans-serif';
         ctx.fillText('SCAN UNTUK BELANJA', qx + qsize / 2, qy + qsize + 26);
         ctx.fillStyle = '#8A7A5C';
-        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.font = '12px "Segoe UI", sans-serif';
         ctx.fillText('Tunjukkan QR ini ke kasir di koperasi', qx + qsize / 2, qy + qsize + 44);
 
         // Kolom kanan: pemilik kartu + QR aplikasi wali (kecil)
-        const rx = 320;
+        const rx = 390;
         ctx.textAlign = 'left';
         ctx.fillStyle = '#8A7A5C';
-        ctx.font = '13px "Segoe UI", sans-serif';
-        ctx.fillText('PEMILIK KARTU', rx, 138);
-        ctx.fillStyle = '#06392A';
-        ctx.font = 'bold 21px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, s.nama, 268), rx, 164);
-        ctx.fillStyle = '#3F3A2E';
         ctx.font = '14px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, 'NIS: ' + s.nis + '  |  Kelas: ' + (s.kelas || '-'), 268), rx, 188);
+        ctx.fillText('PEMILIK KARTU', rx, 350);
+        ctx.fillStyle = '#06392A';
+        ctx.font = 'bold 24px "Segoe UI", sans-serif';
+        ctx.fillText(potongTeks(ctx, s.nama, 560), rx, 382);
+        ctx.fillStyle = '#3F3A2E';
+        ctx.font = '15px "Segoe UI", sans-serif';
+        ctx.fillText(potongTeks(ctx, 'NIS: ' + s.nis + '  |  Kelas: ' + (s.kelas || '-'), 560), rx, 408);
         ctx.strokeStyle = '#E7D8B6';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(rx, 204);
-        ctx.lineTo(600, 204);
+        ctx.moveTo(rx, 430);
+        ctx.lineTo(W - 50, 430);
         ctx.stroke();
 
         const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
-        const wsize = 116, wx = 440, wy = 218;
+        const wsize = 140, wx = 790, wy = 455;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, wx - 7, wy - 7, wsize + 14, wsize + 14, 12);
         ctx.fill();
@@ -3180,7 +3184,7 @@
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 12px "Segoe UI", sans-serif';
+        ctx.font = 'bold 13px "Segoe UI", sans-serif';
         ctx.fillText('APLIKASI WALI', wx + wsize / 2, wy + wsize + 20);
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '10px "Segoe UI", sans-serif';
@@ -3195,7 +3199,7 @@
         await tungguKop();
         const depan = buatKartuDepan(s);
         const belakang = buatKartuBelakang(s);
-        const W = 640, H = 400, G = 60;
+        const W = 1011, H = 638, G = 60;
         const gab = document.createElement('canvas');
         gab.width = W; gab.height = H * 2 + G;
         const gctx = gab.getContext('2d');
@@ -3240,8 +3244,8 @@
                 <button onclick="window.close()" style="padding:8px 18px;">Tutup</button>
                 <p style="font-size:12px;color:#888;margin-top:6px;">Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
             </div>
-            <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
-            <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
+            <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="303"></div>
+            <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="303"></div>
         </body></html>`);
         w.document.close();
         w.focus();
@@ -3344,8 +3348,8 @@
                 const depan = buatKartuDepan(s);
                 const belakang = buatKartuBelakang(s);
                 html += `<div class="santri">
-                    <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
-                    <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
+                    <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="303"></div>
+                    <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="303"></div>
                 </div>`;
             });
             w.document.body.innerHTML = html;
