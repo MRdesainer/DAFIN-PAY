@@ -47,7 +47,14 @@
             .border-ornament { border-image: linear-gradient(90deg, #0B6B4F, #C9A227, #0B6B4F) 1; }
             .teks-emas { background: linear-gradient(90deg, #E8C25C, #C9A227 45%, #F7E8A5 55%, #C9A227); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
         }
-        .nav-link.active { border-bottom-color: #C9A227; color: #0B6B4F; }
+        .nav-link { transition: all .2s ease; }
+        .sidebar-link { color: rgba(255,255,255,0.82); }
+        .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+        .sidebar-link.active { background: rgba(201,162,39,0.16); color: #fff; box-shadow: inset 3px 0 0 #C9A227; }
+        .sidebar-link.active i { color: #E8C25C; }
+        .bottomnav-link { color: #8A7A5C; }
+        .bottomnav-link.active { color: #0B6B4F; }
+        .bottomnav-link.active i { color: #C9A227; }
         .tab-active { background: #0B6B4F; color: white; }
         .struk-print { font-family: 'Courier New', monospace; font-size: 12px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -130,7 +137,8 @@
 
     <!-- Header -->
     <header class="bg-gradient-to-r from-gelap via-primary to-gelap text-white py-3 px-4 shadow-lg relative overflow-hidden">
-        <div class="container mx-auto flex justify-between items-center relative z-10">
+        <div class="md:ml-64 relative z-10">
+            <div class="container flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <img id="logoAplikasi" src="" alt="Logo" class="w-9 h-9 rounded-lg hidden object-cover ring-1 ring-secondary">
                 <i id="iconDefault" class="fas fa-mosque text-2xl text-secondary"></i>
@@ -148,39 +156,72 @@
                 <button id="btnKeluar" class="bg-red-600 px-3 py-1 rounded-md text-sm hover:bg-red-700 transition">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
+                </div>
             </div>
         </div>
         <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
     </header>
 
-    <!-- Navigasi Utama -->
-    <nav class="bg-white/95 backdrop-blur shadow-sm sticky top-0 z-10 border-b border-pasirTua">
-        <div class="container mx-auto px-2">
-            <div class="flex overflow-x-auto no-scrollbar">
-                <button class="nav-link active py-3 px-4 font-medium border-b-2 border-primary text-primary whitespace-nowrap" data-target="transaksi">
-                    <i class="fas fa-cash-register mr-1"></i> Kasir
-                </button>
-                <button class="nav-link py-3 px-4 font-medium border-b-2 border-transparent hover:text-primary whitespace-nowrap" data-target="tabungan">
-                    <i class="fas fa-piggy-bank mr-1"></i> Tabungan Santri
-                </button>
-                <button class="nav-link py-3 px-4 font-medium border-b-2 border-transparent hover:text-primary whitespace-nowrap" data-target="barang">
-                    <i class="fas fa-box mr-1"></i> Barang
-                </button>
-                <button class="nav-link py-3 px-4 font-medium border-b-2 border-transparent hover:text-primary whitespace-nowrap" data-target="laporan">
-                    <i class="fas fa-file-alt mr-1"></i> Laporan
-                </button>
-                <button class="nav-link py-3 px-4 font-medium border-b-2 border-transparent hover:text-primary whitespace-nowrap" data-target="zakat">
-                    <i class="fas fa-hand-holding-heart mr-1"></i> Zakat & Laba
-                </button>
-                <button class="nav-link py-3 px-4 font-medium border-b-2 border-transparent hover:text-primary whitespace-nowrap" data-target="pengaturan">
-                    <i class="fas fa-cog mr-1"></i> Pengaturan
-                </button>
+    <!-- Sidebar Navigasi (desktop) -->
+    <aside class="hidden md:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-gelap via-primary to-gelap text-white z-30 shadow-islami-lg">
+        <div class="flex items-center gap-2.5 px-5 pt-5 pb-4">
+            <img id="logoAplikasiSidebar" src="" alt="Logo" class="w-10 h-10 rounded-xl hidden object-cover ring-2 ring-secondary/70 shrink-0">
+            <i id="iconAplikasiSidebar" class="fas fa-mosque text-2xl text-secondary"></i>
+            <div class="leading-tight">
+                <h1 id="judulAplikasiSidebar" class="font-extrabold teks-emas text-lg">DAFIN-PAY</h1>
+                <p class="text-[10px] text-white/60">Kasir & Tabungan</p>
             </div>
+        </div>
+        <div class="mx-5 mb-3 h-px bg-gradient-to-r from-transparent via-secondary/60 to-transparent"></div>
+        <nav class="flex-1 px-3 space-y-1.5 overflow-y-auto">
+            <button class="nav-link sidebar-link active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[13px]" data-target="transaksi">
+                <i class="fas fa-cash-register w-5 text-center text-lg"></i> Kasir
+            </button>
+            <button class="nav-link sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[13px]" data-target="tabungan">
+                <i class="fas fa-piggy-bank w-5 text-center text-lg"></i> Tabungan Santri
+            </button>
+            <button class="nav-link sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[13px]" data-target="barang">
+                <i class="fas fa-box w-5 text-center text-lg"></i> Barang
+            </button>
+            <button class="nav-link sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[13px]" data-target="laporan">
+                <i class="fas fa-file-alt w-5 text-center text-lg"></i> Laporan
+            </button>
+            <button class="nav-link sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[13px]" data-target="zakat">
+                <i class="fas fa-hand-holding-heart w-5 text-center text-lg"></i> Zakat & Laba
+            </button>
+            <button class="nav-link sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[13px]" data-target="pengaturan">
+                <i class="fas fa-cog w-5 text-center text-lg"></i> Pengaturan
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Navigasi Bawah (mobile) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-pasirTua shadow-islami-lg">
+        <div class="grid grid-cols-6">
+            <button class="nav-link bottomnav-link active flex flex-col items-center justify-center gap-0.5 py-2.5 px-0.5 text-[9px] leading-tight font-semibold" data-target="transaksi">
+                <i class="fas fa-cash-register text-lg"></i><span>Kasir</span>
+            </button>
+            <button class="nav-link bottomnav-link flex flex-col items-center justify-center gap-0.5 py-2.5 px-0.5 text-[9px] leading-tight font-semibold" data-target="tabungan">
+                <i class="fas fa-piggy-bank text-lg"></i><span>Tabungan Santri</span>
+            </button>
+            <button class="nav-link bottomnav-link flex flex-col items-center justify-center gap-0.5 py-2.5 px-0.5 text-[9px] leading-tight font-semibold" data-target="barang">
+                <i class="fas fa-box text-lg"></i><span>Barang</span>
+            </button>
+            <button class="nav-link bottomnav-link flex flex-col items-center justify-center gap-0.5 py-2.5 px-0.5 text-[9px] leading-tight font-semibold" data-target="laporan">
+                <i class="fas fa-file-alt text-lg"></i><span>Laporan</span>
+            </button>
+            <button class="nav-link bottomnav-link flex flex-col items-center justify-center gap-0.5 py-2.5 px-0.5 text-[9px] leading-tight font-semibold" data-target="zakat">
+                <i class="fas fa-hand-holding-heart text-lg"></i><span>Zakat & Laba</span>
+            </button>
+            <button class="nav-link bottomnav-link flex flex-col items-center justify-center gap-0.5 py-2.5 px-0.5 text-[9px] leading-tight font-semibold" data-target="pengaturan">
+                <i class="fas fa-cog text-lg"></i><span>Pengaturan</span>
+            </button>
         </div>
     </nav>
 
     <!-- Konten Utama -->
-    <main class="container mx-auto p-3 mt-2">
+    <div class="md:ml-64">
+    <main class="container mx-auto p-3 mt-2 pb-24 md:pb-8">
 
         <!-- ======================== HALAMAN KASIR ======================== -->
         <section id="halaman-transaksi" class="halaman">
@@ -899,6 +940,7 @@
             </div>
         </section>
     </main>
+    </div>
 
     <!-- ======================== MODAL PEMBAYARAN ======================== -->
     <div id="modalBayar" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
@@ -1860,12 +1902,9 @@
     // ======================== NAVIGASI ========================
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', () => {
-            document.querySelectorAll('.nav-link').forEach(l => {
-                l.classList.remove('active', 'border-primary', 'text-primary');
-                l.classList.add('border-transparent');
-            });
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             document.querySelectorAll('.halaman').forEach(h => h.classList.add('hidden'));
-            link.classList.add('active', 'border-primary', 'text-primary');
+            link.classList.add('active');
             document.getElementById('halaman-' + link.dataset.target).classList.remove('hidden');
             if (link.dataset.target === 'tabungan') { refreshDaftarSantri(); refreshSelectSantri(); }
             if (link.dataset.target === 'laporan') { updateLaporan(); }
@@ -4075,11 +4114,26 @@
     // Terapkan identitas ke UI
     function terapkanIdentitas() {
         document.getElementById('judulAplikasi').textContent = identitas.namaApp.toUpperCase();
+        const judulSidebar = document.getElementById('judulAplikasiSidebar');
+        if (judulSidebar) judulSidebar.textContent = identitas.namaApp.toUpperCase();
         document.title = identitas.namaApp + ' - Aplikasi Kasir';
         muatKopImg();
         const logo = document.getElementById('logoAplikasi');
         const icon = document.getElementById('iconDefault');
-        if (identitas.logo) {
+        const logoSidebar = document.getElementById('logoAplikasiSidebar');
+        const iconSidebar = document.getElementById('iconAplikasiSidebar');
+        const pakaiLogo = !!identitas.logo;
+        if (logoSidebar && iconSidebar) {
+            if (pakaiLogo) {
+                logoSidebar.src = identitas.logo;
+                logoSidebar.classList.remove('hidden');
+                iconSidebar.classList.add('hidden');
+            } else {
+                logoSidebar.classList.add('hidden');
+                iconSidebar.classList.remove('hidden');
+            }
+        }
+        if (pakaiLogo) {
             logo.src = identitas.logo;
             logo.classList.remove('hidden');
             icon.classList.add('hidden');
