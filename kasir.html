@@ -3026,28 +3026,25 @@
         } catch (e) {}
     }
 
-    function gambarBarcodeDepan(ctx, W, nis, nama) {
+    function gambarBarcodeDepan(ctx, x, y, maxW, maxH, nis, nama) {
         if (typeof JsBarcode === 'undefined') return;
         try {
             const bc = document.createElement('canvas');
             new JsBarcode(bc, String(nis) + ' ' + nama, {
                 format: 'CODE128',
                 width: 2,
-                height: 36,
+                height: 30,
                 displayValue: false,
                 background: '#ffffff',
                 lineColor: '#06392A',
                 margin: 2
             });
-            const maxW = W - 140;
             let w = bc.width, h = bc.height;
-            if (w > maxW) { const r = maxW / w; w = maxW; h = Math.round(h * r); }
-            ctx.drawImage(bc, (W - w) / 2, 578, w, h);
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#8A7A5C';
-            ctx.font = 'bold 13px "Segoe UI", sans-serif';
-            ctx.fillText('NIS ' + nis + ' • ' + nama, W / 2, 578 + h + 14);
-            ctx.textAlign = 'left';
+            if (w > maxW || h > maxH) {
+                const r = Math.min(maxW / w, maxH / h);
+                w = Math.round(w * r); h = Math.round(h * r);
+            }
+            ctx.drawImage(bc, x + (maxW - w) / 2, y, w, h);
         } catch (e) {}
     }
 
@@ -3134,8 +3131,24 @@
             y += 54;
         });
 
-        // Barcode NIS + nama di bagian bawah kartu
-        gambarBarcodeDepan(ctx, W, s.nis, s.nama);
+        // Barcode NIS + nama di bawah pas foto (gaya seperti kartu belakang)
+        const bx = 55, by = 574, bw = 210, bh = 60;
+        ctx.fillStyle = '#FFFFFF';
+        rrPath(ctx, bx, by, bw, bh, 10);
+        ctx.fill();
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 2;
+        rrPath(ctx, bx, by, bw, bh, 10);
+        ctx.stroke();
+        gambarBarcodeDepan(ctx, bx + 8, by + 7, bw - 16, 34, s.nis, s.nama);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#A8871F';
+        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.fillText('SCAN UNTUK BELANJA', bx + bw / 2, by + 50);
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '9px "Segoe UI", sans-serif';
+        ctx.fillText(potongTeks(ctx, 'NIS ' + s.nis + ' • ' + s.nama, bw - 12), bx + bw / 2, by + 59);
+        ctx.textAlign = 'left';
 
         ctx.textAlign = 'left';
 
