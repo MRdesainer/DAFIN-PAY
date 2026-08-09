@@ -432,6 +432,11 @@
 
             <!-- Sub: Barcode Santri -->
             <div id="stab-barcodeSantri" class="subhalaman hidden">
+                <div class="flex justify-end mb-3">
+                    <button id="btnCetakSemuaKartu" class="bg-secondary text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 shadow-islami">
+                        <i class="fas fa-print mr-1"></i> Cetak Semua Kartu
+                    </button>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="gridBarcode"></div>
             </div>
 
@@ -1089,7 +1094,26 @@
                 <button id="tutupModalSantri" class="text-stone-500 hover:text-stone-800 text-xl"><i class="fas fa-times"></i></button>
             </div>
             <input type="hidden" id="editSantriId">
+            <input type="hidden" id="hapusFotoSantri" value="0">
             <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-stone-600">Pas Foto Santri</label>
+                    <div class="flex items-center gap-3 mt-1">
+                        <img id="previewFotoSantri" src="" alt="Foto santri" class="w-16 h-20 rounded-lg object-cover border-2 border-pasirTua bg-krem shrink-0">
+                        <div class="flex-1 space-y-2">
+                            <input type="file" id="inputFotoSantri" accept="image/*" class="hidden">
+                            <button type="button" id="btnAmbilFoto" class="w-full bg-islami/10 text-islami border border-islami/40 py-1.5 rounded-lg text-xs font-semibold hover:bg-islami/20">
+                                <i class="fas fa-camera mr-1"></i> Ambil Foto
+                            </button>
+                            <button type="button" id="btnPilihFoto" class="w-full bg-pasir py-1.5 rounded-lg text-xs hover:bg-pasirTua">
+                                <i class="fas fa-image mr-1"></i> Pilih dari Galeri
+                            </button>
+                            <button type="button" id="btnHapusFoto" class="w-full text-red-500 py-1 rounded-lg text-xs hover:bg-red-50">
+                                <i class="fas fa-trash mr-1"></i> Hapus Foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div>
                     <label class="text-sm text-stone-600">No. Induk Santri</label>
                     <input type="text" id="inputNis" placeholder="Contoh: 001" class="w-full border rounded-lg py-2 px-3 text-sm mt-1">
@@ -2364,6 +2388,8 @@
                 document.getElementById('inputKelasSantri').value = s.kelas;
                 document.getElementById('inputOrangTua').value = s.orangTua;
                 document.getElementById('inputHpOrangTua').value = s.hp;
+                document.getElementById('hapusFotoSantri').value = '0';
+                document.getElementById('previewFotoSantri').src = s.foto || FOTO_EMPTY;
                 document.getElementById('judulModalSantri').textContent = 'Edit Santri';
                 document.getElementById('modalSantri').classList.remove('hidden');
                 document.getElementById('modalSantri').classList.add('flex');
@@ -2390,6 +2416,8 @@
         document.getElementById('inputKelasSantri').value = '';
         document.getElementById('inputOrangTua').value = '';
         document.getElementById('inputHpOrangTua').value = '';
+        document.getElementById('hapusFotoSantri').value = '0';
+        document.getElementById('previewFotoSantri').src = FOTO_EMPTY;
         document.getElementById('judulModalSantri').textContent = 'Tambah Santri';
         document.getElementById('modalSantri').classList.remove('hidden');
         document.getElementById('modalSantri').classList.add('flex');
@@ -2398,6 +2426,54 @@
     document.getElementById('tutupModalSantri').addEventListener('click', () => {
         document.getElementById('modalSantri').classList.add('hidden');
         document.getElementById('modalSantri').classList.remove('flex');
+    });
+
+    // Handler pas foto santri
+    function kompresFoto(file, maxW, maxH, cb) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = new Image();
+            img.onload = () => {
+                let w = img.width, h = img.height;
+                const scale = Math.min(maxW / w, maxH / h, 1);
+                w = Math.max(1, Math.round(w * scale));
+                h = Math.max(1, Math.round(h * scale));
+                const cv = document.createElement('canvas');
+                cv.width = w; cv.height = h;
+                cv.getContext('2d').drawImage(img, 0, 0, w, h);
+                cb(cv.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => { showToast('Gagal membaca foto!', 'fa-exclamation-triangle', 'text-yellow-400'); };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    function prosesPilihFoto() {
+        const file = document.getElementById('inputFotoSantri').files[0];
+        if (!file) return;
+        kompresFoto(file, 240, 300, data => {
+            document.getElementById('hapusFotoSantri').value = '0';
+            document.getElementById('previewFotoSantri').src = data;
+            showToast('Foto siap dipakai', 'fa-camera', 'text-islami');
+        });
+    }
+    document.getElementById('btnAmbilFoto').addEventListener('click', () => {
+        const f = document.getElementById('inputFotoSantri');
+        f.setAttribute('capture', 'user');
+        f.value = '';
+        f.click();
+    });
+    document.getElementById('btnPilihFoto').addEventListener('click', () => {
+        const f = document.getElementById('inputFotoSantri');
+        f.removeAttribute('capture');
+        f.value = '';
+        f.click();
+    });
+    document.getElementById('inputFotoSantri').addEventListener('change', prosesPilihFoto);
+    document.getElementById('btnHapusFoto').addEventListener('click', () => {
+        document.getElementById('inputFotoSantri').value = '';
+        document.getElementById('hapusFotoSantri').value = '1';
+        document.getElementById('previewFotoSantri').src = FOTO_EMPTY;
     });
 
     document.getElementById('btnSimpanSantri').addEventListener('click', () => {
@@ -2413,12 +2489,20 @@
             showToast('NIS sudah digunakan!', 'fa-exclamation-triangle', 'text-yellow-400'); return;
         }
 
+        const fileFoto = document.getElementById('inputFotoSantri').files[0];
+        const hapusFoto = document.getElementById('hapusFotoSantri').value === '1';
+        const foto = hapusFoto
+            ? ''
+            : (fileFoto
+                ? document.getElementById('previewFotoSantri').src
+                : (editId ? ((santriList.find(x => x.id === parseInt(editId)) || {}).foto || '') : ''));
+
         let dataSantri = null;
         if (editId) {
             dataSantri = santriList.find(x => x.id === parseInt(editId));
-            if (dataSantri) { dataSantri.nis = nis; dataSantri.nama = nama; dataSantri.kelas = kelas; dataSantri.orangTua = ortu; dataSantri.hp = hp; }
+            if (dataSantri) { dataSantri.nis = nis; dataSantri.nama = nama; dataSantri.kelas = kelas; dataSantri.orangTua = ortu; dataSantri.hp = hp; dataSantri.foto = foto; }
         } else {
-            dataSantri = { id: Date.now(), nis, nama, kelas, orangTua: ortu, hp, saldo: 0 };
+            dataSantri = { id: Date.now(), nis, nama, kelas, orangTua: ortu, hp, foto, saldo: 0 };
             santriList.push(dataSantri);
         }
         simpanLokal('santri');
@@ -2696,6 +2780,49 @@
     const fotoFounderImg = new Image();
     fotoFounderImg.src = FOTO_FOUNDER;
 
+    const FOTO_EMPTY = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="120"><rect width="96" height="120" rx="10" fill="#F2E8D5"/><circle cx="48" cy="46" r="18" fill="#D9CBB0"/><path d="M16 106 Q16 78 48 78 Q80 78 80 106 Z" fill="#D9CBB0"/></svg>'
+    );
+
+    // Cache foto santri (id -> HTMLImageElement) agar bisa digambar sinkron ke canvas kartu.
+    const IMG_FOTO_SANTRI = {};
+    const FOTO_LOADERS = {};
+    function siapkanFotoSantri() {
+        (santriList || []).forEach(s => {
+            if (!s || !s.foto || FOTO_LOADERS[s.id]) return;
+            FOTO_LOADERS[s.id] = new Promise(res => {
+                const img = new Image();
+                img.onload = () => { IMG_FOTO_SANTRI[s.id] = img; res(); };
+                img.onerror = () => { IMG_FOTO_SANTRI[s.id] = null; res(); };
+                img.src = s.foto;
+            });
+        });
+        return Promise.all(Object.keys(FOTO_LOADERS).map(k => FOTO_LOADERS[k]));
+    }
+    function dapatFotoSantri(id) {
+        const img = IMG_FOTO_SANTRI[id];
+        return (img && img.complete && img.naturalWidth > 0) ? img : null;
+    }
+    function gambarRoundedFoto(ctx, img, x, y, w, h, r) {
+        rrPath(ctx, x, y, w, h, r);
+        ctx.clip();
+        ctx.fillStyle = '#F2E8D5';
+        ctx.fillRect(x, y, w, h);
+        if (img) {
+            ctx.drawImage(img, x, y, w, h);
+        } else {
+            ctx.fillStyle = '#D9CBB0';
+            ctx.beginPath();
+            ctx.arc(x + w / 2, y + h * 0.36, w * 0.22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.12, y + h * 0.92);
+            ctx.quadraticCurveTo(x + w * 0.12, y + h * 0.6, x + w / 2, y + h * 0.6);
+            ctx.quadraticCurveTo(x + w * 0.88, y + h * 0.6, x + w * 0.88, y + h * 0.92);
+            ctx.fill();
+        }
+    }
+
     // Badge founder versi kecil di pojok kanan atas kartu (tidak mengganggu QR/barcode).
     function gambarBadgeFounder(ctx, cx, cy) {
         const r = 13;
@@ -2808,43 +2935,59 @@
         ctx.font = 'bold 31px "Segoe UI", sans-serif';
         ctx.fillText('KARTU TANDA SANTRI', 40, 82);
 
-        // Nama & NIS di atas QR
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#06392A';
-        ctx.font = 'bold 27px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, s.nama, 520), 320, 148);
-        ctx.fillStyle = '#3F3A2E';
-        ctx.font = '19px "Segoe UI", sans-serif';
-        ctx.fillText('NIS: ' + s.nis + ' | Kelas: ' + (s.kelas || '-'), 320, 180);
-
-        // Kotak barcode (QR) besar di tengah
-        const qsize = 144;
-        const qx = (W - qsize) / 2, qy = 190;
+        // Pas foto santri (kiri, berbingkai emas)
+        const fx = 40, fy = 128, fw = 152, fh = 192;
         ctx.fillStyle = '#FFFFFF';
-        rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
+        rrPath(ctx, fx - 7, fy - 7, fw + 14, fh + 14, 16);
         ctx.fill();
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 2;
-        rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
+        ctx.strokeStyle = '#C9A227';
+        ctx.lineWidth = 4;
+        rrPath(ctx, fx - 7, fy - 7, fw + 14, fh + 14, 16);
         ctx.stroke();
 
-        const tmp = document.createElement('div');
-        tmp.style.position = 'absolute';
-        tmp.style.left = '-9999px';
-        document.body.appendChild(tmp);
-        new QRCode(tmp, {
-            text: s.nis,
-            width: qsize, height: qsize,
-            colorDark: '#06392A', colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-        });
-        const qrCv = tmp.querySelector('canvas');
-        if (qrCv) ctx.drawImage(qrCv, qx, qy);
-        document.body.removeChild(tmp);
+        ctx.save();
+        gambarRoundedFoto(ctx, dapatFotoSantri(s.id), fx, fy, fw, fh, 12);
+        ctx.restore();
 
-        ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 15px "Segoe UI", sans-serif';
-        ctx.fillText('SCAN UNTUK BELANJA', 320, qy + qsize + 16);
+        // Data santri (kolom kanan) — nilai dibungkus agar tidak menutupi foto
+        ctx.textAlign = 'left';
+        const baris = [
+            ['Nama', s.nama, 23],
+            ['NIS', String(s.nis), 19],
+            ['Kelas', s.kelas || '-', 19],
+            ['Wali', s.orangTua || '-', 16]
+        ];
+        let y = 146;
+        baris.forEach(([lbl, val, fs], i) => {
+            ctx.fillStyle = '#8A7A5C';
+            ctx.font = '13px "Segoe UI", sans-serif';
+            ctx.fillText(lbl.toUpperCase(), 232, y);
+            ctx.fillStyle = '#06392A';
+            ctx.font = 'bold ' + fs + 'px "Segoe UI", sans-serif';
+            const barisVal = fs === 16 ? bungkusTeks(ctx, String(val), 352).slice(0, 2) : [potongTeks(ctx, String(val), 352)];
+            barisVal.forEach((ln, j) => ctx.fillText(ln, 232, y + 26 + j * (fs + 4)));
+            if (i < baris.length - 1) {
+                ctx.strokeStyle = '#E7D8B6';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(232, y + 42);
+                ctx.lineTo(600, y + 42);
+                ctx.stroke();
+            }
+            y += 58;
+        });
+
+        // Kaki kartu
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(40, 372);
+        ctx.lineTo(600, 372);
+        ctx.stroke();
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '13px "Segoe UI", sans-serif';
+        const alamatDepan = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
+        ctx.fillText(potongTeks(ctx, alamatDepan || identitas.namaApp, 560), 40, 396);
 
         gambarBadgeFounder(ctx, W - 45, 45);
 
@@ -2880,37 +3023,10 @@
         ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), 40, 44);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 31px "Segoe UI", sans-serif';
-        ctx.fillText('DATA SANTRI', 40, 82);
+        ctx.fillText('SCAN UNTUK BELANJA', 40, 82);
 
-        // Data santri (kolom kiri) — nilai dibungkus agar tidak menutupi QR kanan
-        ctx.textAlign = 'left';
-        const baris = [
-            ['Nama', s.nama],
-            ['NIS', String(s.nis)],
-            ['Kelas', s.kelas || '-'],
-            ['Wali / Orang Tua', s.orangTua || '-']
-        ];
-        let y = 140;
-        baris.forEach(([lbl, val]) => {
-            ctx.fillStyle = '#8A7A5C';
-            ctx.font = '15px "Segoe UI", sans-serif';
-            ctx.fillText(lbl.toUpperCase(), 40, y);
-            ctx.fillStyle = '#06392A';
-            ctx.font = 'bold 20px "Segoe UI", sans-serif';
-            const lines = bungkusTeks(ctx, String(val), 356).slice(0, 2);
-            lines.forEach((ln, i) => ctx.fillText(potongTeks(ctx, ln, 356), 40, y + 26 + i * 24));
-            ctx.strokeStyle = '#E7D8B6';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(40, y + 52);
-            ctx.lineTo(400, y + 52);
-            ctx.stroke();
-            y += 56;
-        });
-
-        // QR link aplikasi wali (kolom kanan)
-        const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
-        const qx = 420, qy = 132, qsize = 176;
+        // QR belanja besar (kiri) — isi NIS santri
+        const qsize = 200, qx = 44, qy = 122;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -2924,7 +3040,7 @@
         tmp.style.left = '-9999px';
         document.body.appendChild(tmp);
         new QRCode(tmp, {
-            text: linkWali,
+            text: s.nis,
             width: qsize, height: qsize,
             colorDark: '#06392A', colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.M
@@ -2933,13 +3049,64 @@
         if (qrCv) ctx.drawImage(qrCv, qx, qy);
         document.body.removeChild(tmp);
 
-        ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 14px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('APLIKASI WALI', qx + qsize / 2, qy + qsize + 26);
+        ctx.fillStyle = '#A8871F';
+        ctx.font = 'bold 15px "Segoe UI", sans-serif';
+        ctx.fillText('SCAN UNTUK BELANJA', qx + qsize / 2, qy + qsize + 26);
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '11px "Segoe UI", sans-serif';
-        ctx.fillText('Scan QR untuk memantau saldo ananda', qx + qsize / 2, qy + qsize + 45);
+        ctx.fillText('Tunjukkan QR ini ke kasir di koperasi', qx + qsize / 2, qy + qsize + 44);
+
+        // Kolom kanan: pemilik kartu + QR aplikasi wali (kecil)
+        const rx = 320;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '13px "Segoe UI", sans-serif';
+        ctx.fillText('PEMILIK KARTU', rx, 138);
+        ctx.fillStyle = '#06392A';
+        ctx.font = 'bold 21px "Segoe UI", sans-serif';
+        ctx.fillText(potongTeks(ctx, s.nama, 268), rx, 164);
+        ctx.fillStyle = '#3F3A2E';
+        ctx.font = '14px "Segoe UI", sans-serif';
+        ctx.fillText(potongTeks(ctx, 'NIS: ' + s.nis + '  |  Kelas: ' + (s.kelas || '-'), 268), rx, 188);
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(rx, 204);
+        ctx.lineTo(600, 204);
+        ctx.stroke();
+
+        const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
+        const wsize = 116, wx = 440, wy = 218;
+        ctx.fillStyle = '#FFFFFF';
+        rrPath(ctx, wx - 7, wy - 7, wsize + 14, wsize + 14, 12);
+        ctx.fill();
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 2;
+        rrPath(ctx, wx - 7, wy - 7, wsize + 14, wsize + 14, 12);
+        ctx.stroke();
+
+        const tmp2 = document.createElement('div');
+        tmp2.style.position = 'absolute';
+        tmp2.style.left = '-9999px';
+        document.body.appendChild(tmp2);
+        new QRCode(tmp2, {
+            text: linkWali,
+            width: wsize, height: wsize,
+            colorDark: '#06392A', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+        const qrWali = tmp2.querySelector('canvas');
+        if (qrWali) ctx.drawImage(qrWali, wx, wy);
+        document.body.removeChild(tmp2);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#A8871F';
+        ctx.font = 'bold 12px "Segoe UI", sans-serif';
+        ctx.fillText('APLIKASI WALI', wx + wsize / 2, wy + wsize + 20);
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '10px "Segoe UI", sans-serif';
+        ctx.fillText('scan untuk pantau saldo ananda', wx + wsize / 2, wy + wsize + 34);
 
         // Kaki kartu
         ctx.strokeStyle = '#E7D8B6';
@@ -2948,11 +3115,13 @@
         ctx.moveTo(40, 372);
         ctx.lineTo(600, 372);
         ctx.stroke();
-        gambarBadgeFounder(ctx, W - 45, 45);
         ctx.fillStyle = '#8A7A5C';
-        ctx.font = '13px "Segoe UI", sans-serif';
+        ctx.font = '12px "Segoe UI", sans-serif';
         const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(alamat || identitas.namaApp, 320, 392);
+        ctx.fillText(potongTeks(ctx, alamat || identitas.namaApp, 560), 40, 396);
+
+        gambarBadgeFounder(ctx, W - 45, 45);
+
         ctx.textAlign = 'left';
 
         return cv;
@@ -2970,9 +3139,9 @@
         gctx.fillStyle = '#8A7A5C';
         gctx.font = 'bold 16px "Segoe UI", sans-serif';
         gctx.textAlign = 'center';
-        gctx.fillText('— KARTU DEPAN (Barcode) —', W / 2, 24);
+        gctx.fillText('— KARTU DEPAN (Data Santri) —', W / 2, 24);
         gctx.drawImage(depan, 0, 30);
-        gctx.fillText('— KARTU BELAKANG (Data & QR Wali) —', W / 2, H + 30 + 24);
+        gctx.fillText('— KARTU BELAKANG (QR Belanja) —', W / 2, H + 30 + 24);
         gctx.drawImage(belakang, 0, H + G);
         return gab;
     }
@@ -2986,38 +3155,43 @@
     function cetakKartuSantri(santriId) {
         const s = santriList.find(x => x.id === santriId);
         if (!s) return;
-        const depan = buatKartuDepan(s);
-        const belakang = buatKartuBelakang(s);
         const w = window.open('', '', 'width=720,height=520');
+        if (!w) return;
         w.document.write(`<html><head><title>Kartu Santri ${s.nama}</title><style>
             body{margin:0;text-align:center;padding:10px;font-family:Segoe UI,sans-serif;}
             .kartu{margin:6px auto;border:1px dashed #bbb;padding:6px;display:inline-block;}
             .lbl{font-weight:bold;font-size:13px;color:#555;margin:4px 0;}
             img{display:block;}
             @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
-        </style></head><body>
-            <div class="tombol" style="margin-bottom:10px;">
-                <button onclick="window.print()" style="padding:8px 18px;">Cetak</button>
-                <button onclick="window.close()" style="padding:8px 18px;">Tutup</button>
-                <p style="font-size:12px;color:#888;margin-top:6px;">Kartu Depan &amp; Belakang. Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
-            </div>
-            <div class="kartu"><div class="lbl">KARTU DEPAN (Barcode)</div><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
-            <div class="kartu"><div class="lbl">KARTU BELAKANG (Data &amp; QR Aplikasi Wali)</div><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
-        </body></html>`);
+        </style></head><body></body></html>`);
         w.document.close();
-        w.focus();
-        setTimeout(() => { w.print(); }, 300);
+        siapkanFotoSantri().then(() => {
+            const depan = buatKartuDepan(s);
+            const belakang = buatKartuBelakang(s);
+            w.document.body.innerHTML = `
+                <div class="tombol" style="margin-bottom:10px;">
+                    <button onclick="window.print()" style="padding:8px 18px;">Cetak</button>
+                    <button onclick="window.close()" style="padding:8px 18px;">Tutup</button>
+                    <p style="font-size:12px;color:#888;margin-top:6px;">Kartu Depan (Data Santri) &amp; Belakang (QR Belanja). Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
+                </div>
+                <div class="kartu"><div class="lbl">KARTU DEPAN (Data Santri)</div><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
+                <div class="kartu"><div class="lbl">KARTU BELAKANG (QR Belanja)</div><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>`;
+            w.focus();
+            setTimeout(() => { w.print(); }, 300);
+        });
     }
 
     function unduhKartuSantri(santriId) {
         const s = santriList.find(x => x.id === santriId);
         if (!s) return;
-        const gab = buatKartuGabungan(s);
-        const a = document.createElement('a');
-        a.href = gab.toDataURL('image/png');
-        a.download = `kartu_${s.nis}_${s.nama.replace(/\s+/g, '_')}_depan_belakang.png`;
-        a.click();
-        showToast('Kartu santri (depan & belakang) diunduh');
+        siapkanFotoSantri().then(() => {
+            const gab = buatKartuGabungan(s);
+            const a = document.createElement('a');
+            a.href = gab.toDataURL('image/png');
+            a.download = `kartu_${s.nis}_${s.nama.replace(/\s+/g, '_')}_depan_belakang.png`;
+            a.click();
+            showToast('Kartu santri (depan & belakang) diunduh');
+        });
     }
 
     function renderBarcodeSantri() {
@@ -3040,7 +3214,9 @@
                         <div class="qr-${s.id}"></div>
                     </div>
                     <div class="flex items-center justify-center gap-2 mb-1">
-                        <div class="w-8 h-8 rounded-full bg-islami text-white flex items-center justify-center text-sm font-bold ring-2 ring-secondary/60">${s.nama.charAt(0)}</div>
+                        ${s.foto
+                            ? `<img src="${s.foto}" alt="Foto ${s.nama}" class="w-8 h-8 rounded-full object-cover ring-2 ring-secondary/60">`
+                            : `<div class="w-8 h-8 rounded-full bg-islami text-white flex items-center justify-center text-sm font-bold ring-2 ring-secondary/60">${s.nama.charAt(0)}</div>`}
                         <h4 class="font-bold text-sm">${s.nama}</h4>
                     </div>
                     <p class="text-xs text-stone-500">NIS: ${s.nis} | ${s.kelas}</p>
@@ -3078,6 +3254,42 @@
         if (cetakBtn) cetakKartuSantri(parseInt(cetakBtn.dataset.id));
         if (unduhBtn) unduhKartuSantri(parseInt(unduhBtn.dataset.id));
     });
+
+    function cetakSemuaKartu() {
+        if (!santriList || santriList.length === 0) { showToast('Belum ada data santri', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+        const w = window.open('', '', 'width=760,height=600');
+        if (!w) return;
+        w.document.write(`<html><head><title>Kartu Santri - Semua</title><style>
+            body{margin:0;text-align:center;padding:10px;font-family:Segoe UI,sans-serif;}
+            .tombol{margin-bottom:10px;}
+            .santri{page-break-after:always;}
+            .kartu{margin:4px auto;border:1px dashed #bbb;padding:5px;display:inline-block;}
+            .lbl{font-weight:bold;font-size:12px;color:#555;margin:3px 0;}
+            img{display:block;}
+            @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
+        </style></head><body></body></html>`);
+        w.document.close();
+        siapkanFotoSantri().then(() => {
+            let html = '<div class="tombol">'
+                + '<button onclick="window.print()" style="padding:8px 18px;">Cetak Semua</button>'
+                + '<button onclick="window.close()" style="padding:8px 18px;">Tutup</button>'
+                + '<p style="font-size:12px;color:#888;margin-top:6px;">Setiap santri dicetak pada halaman terpisah (depan + belakang).</p>'
+                + '</div>';
+            santriList.forEach(s => {
+                const depan = buatKartuDepan(s);
+                const belakang = buatKartuBelakang(s);
+                html += `<div class="santri">
+                    <div class="kartu"><div class="lbl">KARTU DEPAN (Data Santri) - ${s.nama}</div><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
+                    <div class="kartu"><div class="lbl">KARTU BELAKANG (QR Belanja) - ${s.nama}</div><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
+                </div>`;
+            });
+            w.document.body.innerHTML = html;
+            w.focus();
+            setTimeout(() => { w.print(); }, 350);
+        });
+    }
+    const btnCetakSemuaKartu = document.getElementById('btnCetakSemuaKartu');
+    if (btnCetakSemuaKartu) btnCetakSemuaKartu.addEventListener('click', cetakSemuaKartu);
 
     // QR modal (dari kartu santri)
     let qrSantriAktif = null;
