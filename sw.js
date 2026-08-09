@@ -1,7 +1,7 @@
 // Service Worker - DAFIN-PAY
 // Ganti "CACHE" versi di bawah ini setiap kali Anda memperbarui app
 // agar pengguna mendapat versi baru (cache ikut ter-refresh).
-const CACHE = 'dafinpay-v34';
+const CACHE = 'dafinpay-v37';
 
 const PRECACHE = [
     './index.html',

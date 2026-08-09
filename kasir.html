@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -3025,6 +3026,31 @@
         } catch (e) {}
     }
 
+    function gambarBarcodeDepan(ctx, W, nis, nama) {
+        if (typeof JsBarcode === 'undefined') return;
+        try {
+            const bc = document.createElement('canvas');
+            new JsBarcode(bc, String(nis) + ' ' + nama, {
+                format: 'CODE128',
+                width: 2,
+                height: 36,
+                displayValue: false,
+                background: '#ffffff',
+                lineColor: '#06392A',
+                margin: 2
+            });
+            const maxW = W - 140;
+            let w = bc.width, h = bc.height;
+            if (w > maxW) { const r = maxW / w; w = maxW; h = Math.round(h * r); }
+            ctx.drawImage(bc, (W - w) / 2, 578, w, h);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#8A7A5C';
+            ctx.font = 'bold 13px "Segoe UI", sans-serif';
+            ctx.fillText('NIS ' + nis + ' • ' + nama, W / 2, 578 + h + 14);
+            ctx.textAlign = 'left';
+        } catch (e) {}
+    }
+
     function buatKartuDepan(s) {
         const W = 1011, H = 638, HEAD = 180;
         const cv = document.createElement('canvas');
@@ -3081,9 +3107,9 @@
         const dx = 310, maxW = 640;
         const jkTeks = s.jk === 'P' ? 'Perempuan' : 'Laki-laki';
         const baris = [
-            ['Nama', s.nama, 21],
-            ['NIS', String(s.nis), 17],
-            ['TTL', s.ttl || '-', 17],
+            ['Nama Santri', s.nama, 21],
+            ['Nomor Induk Santri', String(s.nis), 17],
+            ['Tempat, Tanggal Lahir', s.ttl || '-', 17],
             ['Jenis Kelamin', jkTeks, 17],
             ['Kamar / Kelas', s.kelas || '-', 17],
             ['Wali', s.orangTua || '-', 17],
@@ -3107,6 +3133,9 @@
             }
             y += 54;
         });
+
+        // Barcode NIS + nama di bagian bawah kartu
+        gambarBarcodeDepan(ctx, W, s.nis, s.nama);
 
         ctx.textAlign = 'left';
 
@@ -3240,14 +3269,15 @@
         await tungguKop();
         const depan = buatKartuDepan(s);
         const belakang = buatKartuBelakang(s);
-        const W = 1011, H = 638, G = 60;
+        const W = 1011, H = 638;
+        const margin = 50, gap = 100;
         const gab = document.createElement('canvas');
-        gab.width = W; gab.height = H * 2 + G;
+        gab.width = W; gab.height = margin + H + gap + H + margin;
         const gctx = gab.getContext('2d');
         gctx.fillStyle = '#FFFFFF';
         gctx.fillRect(0, 0, gab.width, gab.height);
-        gctx.drawImage(depan, 0, 30);
-        gctx.drawImage(belakang, 0, H + G);
+        gctx.drawImage(depan, 0, margin);
+        gctx.drawImage(belakang, 0, margin + H + gap);
         return gab;
     }
 
