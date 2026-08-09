@@ -722,23 +722,44 @@
                 <!-- Kop Pondok / Kop Kartu Santri -->
                 <div class="bg-white rounded-xl shadow-islami p-4">
                     <h3 class="font-bold text-lg mb-1"><i class="fas fa-scroll text-primary mr-2"></i>Kop Pondok / Kop Kartu Santri</h3>
-                    <p class="text-xs text-stone-500 mb-3">Kop pondok (banner / letterhead) akan tampil sebagai kepala kartu santri, baik di kartu depan maupun belakang — menggantikan tulisan "KARTU TANDA SANTRI", "SCAN UNTUK BELANJA", dan nama aplikasi. Kosongkan untuk memakai teks bawaan.</p>
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1 border-2 border-dashed border-pasirTua rounded-xl overflow-hidden bg-krem flex items-center justify-center" style="height:96px" id="previewKop">
-                            <i class="fas fa-scroll text-stone-300 text-3xl" id="kopPlaceholder"></i>
-                            <img id="previewKopImg" src="" class="w-full h-full object-cover hidden" alt="Kop Pondok">
-                        </div>
-                        <div class="flex-1">
-                            <input type="file" id="inputKop" accept="image/*" class="hidden">
-                            <button id="btnPilihKop" class="bg-pasir px-3 py-2 rounded-lg text-sm hover:bg-pasirTua transition w-full text-left mb-1">
-                                <i class="fas fa-upload mr-1"></i> Pilih Gambar Kop
-                            </button>
-                            <button id="btnHapusKop" class="bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-200 transition w-full text-left">
-                                <i class="fas fa-trash mr-1"></i> Hapus Kop
-                            </button>
+                    <p class="text-xs text-stone-500 mb-3">Unggah kop (banner / letterhead) untuk kepala kartu santri. Kop depan dan belakang boleh berbeda. Kosongkan salah satu untuk memakai teks bawaan.</p>
+                    <div class="mb-4">
+                        <p class="text-sm font-semibold text-primary mb-2"><i class="fas fa-id-card mr-1"></i>Kop Kartu Depan</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 border-2 border-dashed border-pasirTua rounded-xl overflow-hidden bg-krem flex items-center justify-center" style="height:96px" id="previewKop">
+                                <i class="fas fa-scroll text-stone-300 text-3xl" id="kopPlaceholder"></i>
+                                <img id="previewKopImg" src="" class="w-full h-full object-cover hidden" alt="Kop Depan">
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" id="inputKop" accept="image/*" class="hidden">
+                                <button id="btnPilihKop" class="bg-pasir px-3 py-2 rounded-lg text-sm hover:bg-pasirTua transition w-full text-left mb-1">
+                                    <i class="fas fa-upload mr-1"></i> Pilih Gambar Kop
+                                </button>
+                                <button id="btnHapusKop" class="bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-200 transition w-full text-left">
+                                    <i class="fas fa-trash mr-1"></i> Hapus Kop
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <p class="text-xs text-stone-400 mt-2">Format: JPG, PNG. Maks 2MB. Disarankan gambar lebar (landscape), mis. 1280×200 px, agar pas di kepala kartu.</p>
+                    <div>
+                        <p class="text-sm font-semibold text-primary mb-2"><i class="fas fa-qrcode mr-1"></i>Kop Kartu Belakang</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 border-2 border-dashed border-pasirTua rounded-xl overflow-hidden bg-krem flex items-center justify-center" style="height:96px" id="previewKopB">
+                                <i class="fas fa-scroll text-stone-300 text-3xl" id="kopPlaceholderB"></i>
+                                <img id="previewKopImgB" src="" class="w-full h-full object-cover hidden" alt="Kop Belakang">
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" id="inputKopB" accept="image/*" class="hidden">
+                                <button id="btnPilihKopB" class="bg-pasir px-3 py-2 rounded-lg text-sm hover:bg-pasirTua transition w-full text-left mb-1">
+                                    <i class="fas fa-upload mr-1"></i> Pilih Gambar Kop
+                                </button>
+                                <button id="btnHapusKopB" class="bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-200 transition w-full text-left">
+                                    <i class="fas fa-trash mr-1"></i> Hapus Kop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-stone-400 mt-2">Format: JPG, PNG. Maks 2MB per gambar. Disarankan gambar lebar (landscape), mis. 1280×200 px, agar pas di kepala kartu.</p>
                 </div>
 
                 <!-- Jadwal Sholat & Pengingat -->
@@ -2846,39 +2867,45 @@
     }
 
     // Kop pondok (banner/letterhead) untuk kepala kartu santri.
-    let kopImg = new Image();
-    function muatKopImg() {
-        if (identitas.kop && String(identitas.kop).trim()) {
-            const src = String(identitas.kop).trim();
-            if (kopImg.src !== src) kopImg.src = src;
+    let kopImg = new Image();   // kop kartu depan
+    let kopImgB = new Image();  // kop kartu belakang
+    function muatKopKe(img, val) {
+        if (val && String(val).trim()) {
+            const src = String(val).trim();
+            if (img.src !== src) img.src = src;
         } else {
-            kopImg.removeAttribute('src');
+            img.removeAttribute('src');
         }
+    }
+    function muatKopImg() {
+        muatKopKe(kopImg, identitas.kop);
+        muatKopKe(kopImgB, identitas.kopBelakang);
     }
 
     // Gambar kop sebagai kepala kartu (cover-crop). Mengembalikan true bila kop berhasil digambar.
-    function gambarKopKartu(ctx, W, H) {
-        if (!(identitas.kop && String(identitas.kop).trim())) return false;
-        if (!kopImg.complete || !kopImg.naturalWidth || !kopImg.naturalHeight) return false;
+    function gambarKopKartu(ctx, W, H, img) {
+        if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return false;
         ctx.save();
         rrPath(ctx, 0, 0, W, H, 24);
         ctx.clip();
-        const iw = kopImg.naturalWidth, ih = kopImg.naturalHeight;
+        const iw = img.naturalWidth, ih = img.naturalHeight;
         const scale = Math.max(W / iw, H / ih);
         const dw = iw * scale, dh = ih * scale;
-        ctx.drawImage(kopImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
         ctx.restore();
         return true;
     }
 
     // Pastikan kop sudah termuat sebelum kartu digambar.
     function tungguKop() {
-        return new Promise(resolve => {
-            if (!(identitas.kop && String(identitas.kop).trim())) return resolve();
-            if (kopImg.complete && kopImg.naturalWidth > 0) return resolve();
-            kopImg.onload = () => resolve();
-            kopImg.onerror = () => resolve();
-        });
+        const list = [];
+        if (identitas.kop && String(identitas.kop).trim()) list.push(kopImg);
+        if (identitas.kopBelakang && String(identitas.kopBelakang).trim()) list.push(kopImgB);
+        return Promise.all(list.map(img => new Promise(resolve => {
+            if (img.complete && img.naturalWidth > 0) return resolve();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+        })));
     }
     // Badge founder versi kecil di pojok kanan atas kartu (tidak mengganggu QR/barcode).
     function gambarBadgeFounder(ctx, cx, cy) {
@@ -2985,7 +3012,7 @@
         ctx.fillRect(0, 100, W, 6);
 
         // Kepala kartu: jika kop pondok dipasang, gambar kop menggantikan teks bawaan.
-        const pakaiKop = gambarKopKartu(ctx, W, 100);
+        const pakaiKop = gambarKopKartu(ctx, W, 100, kopImg);
         if (!pakaiKop) {
             // Teks kepala kartu
             ctx.fillStyle = '#E8C25C';
@@ -3080,7 +3107,7 @@
         ctx.fillRect(0, 100, W, 6);
 
         // Kepala kartu: jika kop pondok dipasang, gambar kop menggantikan teks bawaan.
-        const pakaiKop = gambarKopKartu(ctx, W, 100);
+        const pakaiKop = gambarKopKartu(ctx, W, 100, kopImgB);
         if (!pakaiKop) {
             ctx.fillStyle = '#E8C25C';
             ctx.font = 'bold 20px "Segoe UI", sans-serif';
@@ -3979,7 +4006,7 @@
     let adminPassword = DB.get('admin_pass', 'admin123');
     let identitas = DB.get('identitas', {
         namaApp: 'DAFIN-PAY', alamat: 'Jl. Raya Dafin No. 1',
-        telepon: '0812-3456-7890', kota: '', logo: '', kop: '',
+        telepon: '0812-3456-7890', kota: '', logo: '', kop: '', kopBelakang: '',
         bank: 'Bank Syariah Indonesia', noRek: '1234-5678-9012', atasNama: 'Koperasi Dafin',
         linkWali: '',
         sholat: {
@@ -4045,6 +4072,14 @@
                 document.getElementById('previewKopImg').classList.add('hidden');
                 document.getElementById('kopPlaceholder').classList.remove('hidden');
             }
+            if (identitas.kopBelakang && String(identitas.kopBelakang).trim()) {
+                document.getElementById('previewKopImgB').src = identitas.kopBelakang;
+                document.getElementById('previewKopImgB').classList.remove('hidden');
+                document.getElementById('kopPlaceholderB').classList.add('hidden');
+            } else {
+                document.getElementById('previewKopImgB').classList.add('hidden');
+                document.getElementById('kopPlaceholderB').classList.remove('hidden');
+            }
         } else {
             showToast('Username atau password salah!', 'fa-times-circle', 'text-red-400');
         }
@@ -4089,32 +4124,37 @@
     });
 
     // Kop pondok upload
-    document.getElementById('btnPilihKop').addEventListener('click', () => document.getElementById('inputKop').click());
-    document.getElementById('inputKop').addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { showToast('Ukuran gambar maks 2MB!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
-        const reader = new FileReader();
-        reader.onload = ev => {
-            identitas.kop = ev.target.result;
-            document.getElementById('previewKopImg').src = ev.target.result;
-            document.getElementById('previewKopImg').classList.remove('hidden');
-            document.getElementById('kopPlaceholder').classList.add('hidden');
+    // Kop pondok upload (depan & belakang)
+    function pasangKopUpload(cfg) {
+        document.getElementById(cfg.btnPilih).addEventListener('click', () => document.getElementById(cfg.input).click());
+        document.getElementById(cfg.input).addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { showToast('Ukuran gambar maks 2MB!', 'fa-exclamation-triangle', 'text-yellow-400'); return; }
+            const reader = new FileReader();
+            reader.onload = ev => {
+                identitas[cfg.field] = ev.target.result;
+                document.getElementById(cfg.img).src = ev.target.result;
+                document.getElementById(cfg.img).classList.remove('hidden');
+                document.getElementById(cfg.ph).classList.add('hidden');
+                DB.set('identitas', identitas);
+                terapkanIdentitas();
+                showToast('Kop diperbarui! Kartu santri akan memakai kop ini.');
+            };
+            reader.readAsDataURL(file);
+        });
+        document.getElementById(cfg.btnHapus).addEventListener('click', () => {
+            identitas[cfg.field] = '';
             DB.set('identitas', identitas);
+            document.getElementById(cfg.img).classList.add('hidden');
+            document.getElementById(cfg.ph).classList.remove('hidden');
+            document.getElementById(cfg.input).value = '';
             terapkanIdentitas();
-            showToast('Kop pondok diperbarui! Kartu santri akan memakai kop ini.');
-        };
-        reader.readAsDataURL(file);
-    });
-    document.getElementById('btnHapusKop').addEventListener('click', () => {
-        identitas.kop = '';
-        DB.set('identitas', identitas);
-        document.getElementById('previewKopImg').classList.add('hidden');
-        document.getElementById('kopPlaceholder').classList.remove('hidden');
-        document.getElementById('inputKop').value = '';
-        terapkanIdentitas();
-        showToast('Kop pondok dihapus', 'fa-trash', 'text-red-400');
-    });
+            showToast('Kop dihapus', 'fa-trash', 'text-red-400');
+        });
+    }
+    pasangKopUpload({ field: 'kop', input: 'inputKop', btnPilih: 'btnPilihKop', btnHapus: 'btnHapusKop', img: 'previewKopImg', ph: 'kopPlaceholder' });
+    pasangKopUpload({ field: 'kopBelakang', input: 'inputKopB', btnPilih: 'btnPilihKopB', btnHapus: 'btnHapusKopB', img: 'previewKopImgB', ph: 'kopPlaceholderB' });
 
     // Simpan identitas
     document.getElementById('btnSimpanIdentitas').addEventListener('click', () => {
