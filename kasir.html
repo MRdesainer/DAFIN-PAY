@@ -2988,7 +2988,7 @@
     }
 
     function buatKartuDepan(s) {
-        const W = 1011, H = 638, HEAD = 300;
+        const W = 1011, H = 638, HEAD = 180;
         const cv = document.createElement('canvas');
         cv.width = W; cv.height = H;
         const ctx = cv.getContext('2d');
@@ -3016,16 +3016,16 @@
         if (!pakaiKop) {
             ctx.textAlign = 'center';
             ctx.fillStyle = '#E8C25C';
-            ctx.font = 'bold 22px "Segoe UI", sans-serif';
-            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 132);
+            ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 88);
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 34px "Segoe UI", sans-serif';
-            ctx.fillText('KARTU TANDA SANTRI', W / 2, 196);
+            ctx.font = 'bold 30px "Segoe UI", sans-serif';
+            ctx.fillText('KARTU TANDA SANTRI', W / 2, 144);
             ctx.textAlign = 'left';
         }
 
         // Pas foto santri (kiri, berbingkai emas)
-        const fx = 70, fy = 345, fw = 180, fh = 230;
+        const fx = 70, fy = 340, fw = 180, fh = 230;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, fx - 8, fy - 8, fw + 16, fh + 16, 16);
         ctx.fill();
@@ -3047,7 +3047,7 @@
             ['Kelas', s.kelas || '-', 22],
             ['Wali', s.orangTua || '-', 18]
         ];
-        let y = 355;
+        let y = 350;
         baris.forEach(([lbl, val, fs], i) => {
             ctx.fillStyle = '#8A7A5C';
             ctx.font = '15px "Segoe UI", sans-serif';
@@ -3073,7 +3073,7 @@
     }
 
     function buatKartuBelakang(s) {
-        const W = 1011, H = 638, HEAD = 300;
+        const W = 1011, H = 638, HEAD = 180;
         const cv = document.createElement('canvas');
         cv.width = W; cv.height = H;
         const ctx = cv.getContext('2d');
@@ -3099,16 +3099,16 @@
         if (!pakaiKop) {
             ctx.textAlign = 'center';
             ctx.fillStyle = '#E8C25C';
-            ctx.font = 'bold 22px "Segoe UI", sans-serif';
-            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 132);
+            ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            ctx.fillText((identitas.namaApp || 'DAFIN-PAY').toUpperCase(), W / 2, 88);
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 34px "Segoe UI", sans-serif';
-            ctx.fillText('SCAN UNTUK BELANJA', W / 2, 196);
+            ctx.font = 'bold 30px "Segoe UI", sans-serif';
+            ctx.fillText('SCAN UNTUK BELANJA', W / 2, 144);
             ctx.textAlign = 'left';
         }
 
         // QR belanja besar (kiri) — isi NIS santri
-        const qsize = 250, qx = 80, qy = 330;
+        const qsize = 250, qx = 80, qy = 320;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.fill();
@@ -3144,22 +3144,22 @@
         ctx.textAlign = 'left';
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '14px "Segoe UI", sans-serif';
-        ctx.fillText('PEMILIK KARTU', rx, 350);
+        ctx.fillText('PEMILIK KARTU', rx, 340);
         ctx.fillStyle = '#06392A';
         ctx.font = 'bold 24px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, s.nama, 560), rx, 382);
+        ctx.fillText(potongTeks(ctx, s.nama, 560), rx, 372);
         ctx.fillStyle = '#3F3A2E';
         ctx.font = '15px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, 'NIS: ' + s.nis + '  |  Kelas: ' + (s.kelas || '-'), 560), rx, 408);
+        ctx.fillText(potongTeks(ctx, 'NIS: ' + s.nis + '  |  Kelas: ' + (s.kelas || '-'), 560), rx, 398);
         ctx.strokeStyle = '#E7D8B6';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(rx, 430);
-        ctx.lineTo(W - 50, 430);
+        ctx.moveTo(rx, 420);
+        ctx.lineTo(W - 50, 420);
         ctx.stroke();
 
         const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
-        const wsize = 140, wx = 790, wy = 455;
+        const wsize = 140, wx = 790, wy = 445;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, wx - 7, wy - 7, wsize + 14, wsize + 14, 12);
         ctx.fill();
