@@ -3108,7 +3108,7 @@
             y += 44;
         });
 
-        // QR NIS + nama di pojok kanan bawah (gaya seperti kartu belakang)
+        // QR semua data santri di pojok kanan bawah (gaya seperti kartu belakang)
         const qsize = 120, qx = W - 50 - qsize - 8, qy = 492;
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
@@ -3118,12 +3118,21 @@
         rrPath(ctx, qx - 8, qy - 8, qsize + 16, qsize + 16, 14);
         ctx.stroke();
 
+        const dataQRSantri = [
+            'NIS: ' + s.nis,
+            'NAMA: ' + s.nama,
+            'TTL: ' + (s.ttl || '-'),
+            'JK: ' + jkTeks,
+            'KAMAR: ' + (s.kelas || '-'),
+            'WALI: ' + (s.orangTua || '-'),
+            'TAHUN: ' + (s.tahunMasuk || '-')
+        ].join(' | ');
         const tmp = document.createElement('div');
         tmp.style.position = 'absolute';
         tmp.style.left = '-9999px';
         document.body.appendChild(tmp);
         new QRCode(tmp, {
-            text: String(s.nis) + ' ' + s.nama,
+            text: dataQRSantri,
             width: qsize, height: qsize,
             colorDark: '#06392A', colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.M
@@ -3134,8 +3143,8 @@
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#A8871F';
-        ctx.font = 'bold 10px "Segoe UI", sans-serif';
-        ctx.fillText('SCAN UNTUK BELANJA', qx + qsize / 2, qy + qsize + 20);
+        ctx.font = 'bold 9px "Segoe UI", sans-serif';
+        ctx.fillText('SCAN UNTUK DATA SANTRI', qx + qsize / 2, qy + qsize + 20);
         ctx.textAlign = 'left';
 
         ctx.textAlign = 'left';
@@ -3810,8 +3819,11 @@
         }
         let santri = santriList.find(s => String(s.nis) === kode);
         if (!santri) {
-            const token = String(kode).split(/[^0-9A-Za-z]/)[0];
-            if (token && token !== kode) santri = santriList.find(s => String(s.nis) === token);
+            let token = null;
+            const m = String(kode).match(/NIS[:=\s]*([0-9A-Za-z\-]+)/i);
+            if (m) token = m[1];
+            if (!token) token = String(kode).split(/[^0-9A-Za-z]/)[0];
+            if (token) santri = santriList.find(s => String(s.nis) === token);
         }
         const panel = document.getElementById('hasilScanPanel');
         if (santri) {
