@@ -3077,8 +3077,6 @@
         const alamatDepan = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
         ctx.fillText(potongTeks(ctx, alamatDepan || identitas.namaApp, 560), 40, 396);
 
-        gambarBadgeFounder(ctx, W - 45, 45);
-
         ctx.textAlign = 'left';
 
         return cv;
@@ -3211,8 +3209,6 @@
         ctx.font = '12px "Segoe UI", sans-serif';
         const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
         ctx.fillText(potongTeks(ctx, alamat || identitas.namaApp, 560), 40, 396);
-
-        gambarBadgeFounder(ctx, W - 45, 45);
 
         ctx.textAlign = 'left';
 
