@@ -3065,18 +3065,6 @@
             y += 58;
         });
 
-        // Kaki kartu
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(40, 372);
-        ctx.lineTo(600, 372);
-        ctx.stroke();
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '13px "Segoe UI", sans-serif';
-        const alamatDepan = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(potongTeks(ctx, alamatDepan || identitas.namaApp, 560), 40, 396);
-
         ctx.textAlign = 'left';
 
         return cv;
@@ -3197,18 +3185,6 @@
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '10px "Segoe UI", sans-serif';
         ctx.fillText('scan untuk pantau saldo ananda', wx + wsize / 2, wy + wsize + 34);
-
-        // Kaki kartu
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(40, 372);
-        ctx.lineTo(600, 372);
-        ctx.stroke();
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '12px "Segoe UI", sans-serif';
-        const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(potongTeks(ctx, alamat || identitas.namaApp, 560), 40, 396);
 
         ctx.textAlign = 'left';
 
