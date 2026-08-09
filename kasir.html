@@ -3201,12 +3201,7 @@
         const gctx = gab.getContext('2d');
         gctx.fillStyle = '#FFFFFF';
         gctx.fillRect(0, 0, gab.width, gab.height);
-        gctx.fillStyle = '#8A7A5C';
-        gctx.font = 'bold 16px "Segoe UI", sans-serif';
-        gctx.textAlign = 'center';
-        gctx.fillText('— KARTU DEPAN (Data Santri) —', W / 2, 24);
         gctx.drawImage(depan, 0, 30);
-        gctx.fillText('— KARTU BELAKANG (QR Belanja) —', W / 2, H + 30 + 24);
         gctx.drawImage(belakang, 0, H + G);
         return gab;
     }
@@ -3237,17 +3232,16 @@
         w.document.write(`<html><head><title>Kartu Santri ${s.nama}</title><style>
             body{margin:0;text-align:center;padding:10px;font-family:Segoe UI,sans-serif;}
             .kartu{margin:6px auto;border:1px dashed #bbb;padding:6px;display:inline-block;}
-            .lbl{font-weight:bold;font-size:13px;color:#555;margin:4px 0;}
             img{display:block;}
             @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
         </style></head><body>
             <div class="tombol" style="margin-bottom:10px;">
                 <button onclick="window.print()" style="padding:8px 18px;">Cetak</button>
                 <button onclick="window.close()" style="padding:8px 18px;">Tutup</button>
-                <p style="font-size:12px;color:#888;margin-top:6px;">Kartu Depan (Data Santri) &amp; Belakang (QR Belanja). Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
+                <p style="font-size:12px;color:#888;margin-top:6px;">Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
             </div>
-            <div class="kartu"><div class="lbl">KARTU DEPAN (Data Santri)</div><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
-            <div class="kartu"><div class="lbl">KARTU BELAKANG (QR Belanja)</div><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
+            <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
+            <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
         </body></html>`);
         w.document.close();
         w.focus();
@@ -3336,7 +3330,6 @@
             .tombol{margin-bottom:10px;}
             .santri{page-break-after:always;}
             .kartu{margin:4px auto;border:1px dashed #bbb;padding:5px;display:inline-block;}
-            .lbl{font-weight:bold;font-size:12px;color:#555;margin:3px 0;}
             img{display:block;}
             @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
         </style></head><body></body></html>`);
@@ -3351,8 +3344,8 @@
                 const depan = buatKartuDepan(s);
                 const belakang = buatKartuBelakang(s);
                 html += `<div class="santri">
-                    <div class="kartu"><div class="lbl">KARTU DEPAN (Data Santri) - ${s.nama}</div><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
-                    <div class="kartu"><div class="lbl">KARTU BELAKANG (QR Belanja) - ${s.nama}</div><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
+                    <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="300"></div>
+                    <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="300"></div>
                 </div>`;
             });
             w.document.body.innerHTML = html;
