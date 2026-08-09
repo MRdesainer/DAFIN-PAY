@@ -3235,17 +3235,18 @@
         w.document.open();
         w.document.write(`<html><head><title>Kartu Santri ${s.nama}</title><style>
             body{margin:0;text-align:center;padding:10px;font-family:Segoe UI,sans-serif;}
-            .kartu{margin:6px auto;border:1px dashed #bbb;padding:6px;display:inline-block;}
-            img{display:block;}
+            .kartu{margin:4px auto;border:1px dashed #bbb;display:inline-block;}
+            img{display:block;width:85.6mm;height:53.98mm;}
+            .hal{page-break-after:always;}
             @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
         </style></head><body>
             <div class="tombol" style="margin-bottom:10px;">
                 <button onclick="window.print()" style="padding:8px 18px;">Cetak</button>
                 <button onclick="window.close()" style="padding:8px 18px;">Tutup</button>
-                <p style="font-size:12px;color:#888;margin-top:6px;">Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
+                <p style="font-size:12px;color:#888;margin-top:6px;">Ukuran kartu standar 85,6 &times; 54 mm (CR80). Untuk cetak bolak-balik, pilih "2-Sided / Manual Duplex" pada dialog cetak.</p>
             </div>
-            <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="303"></div>
-            <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="303"></div>
+            <div class="hal"><div class="kartu"><img src="${depan.toDataURL('image/png')}"></div></div>
+            <div class="kartu"><img src="${belakang.toDataURL('image/png')}"></div>
         </body></html>`);
         w.document.close();
         w.focus();
@@ -3332,9 +3333,9 @@
         w.document.write(`<html><head><title>Kartu Santri - Semua</title><style>
             body{margin:0;text-align:center;padding:10px;font-family:Segoe UI,sans-serif;}
             .tombol{margin-bottom:10px;}
-            .santri{page-break-after:always;}
-            .kartu{margin:4px auto;border:1px dashed #bbb;padding:5px;display:inline-block;}
-            img{display:block;}
+            .hal{page-break-after:always;}
+            .kartu{margin:4px auto;border:1px dashed #bbb;display:inline-block;}
+            img{display:block;width:85.6mm;height:53.98mm;}
             @media print{.tombol{display:none}.kartu{border:none;page-break-inside:avoid}}
         </style></head><body></body></html>`);
         w.document.close();
@@ -3347,10 +3348,8 @@
             santriList.forEach(s => {
                 const depan = buatKartuDepan(s);
                 const belakang = buatKartuBelakang(s);
-                html += `<div class="santri">
-                    <div class="kartu"><img src="${depan.toDataURL('image/png')}" width="480" height="303"></div>
-                    <div class="kartu"><img src="${belakang.toDataURL('image/png')}" width="480" height="303"></div>
-                </div>`;
+                html += `<div class="hal"><div class="kartu"><img src="${depan.toDataURL('image/png')}"></div></div>
+                    <div class="hal"><div class="kartu"><img src="${belakang.toDataURL('image/png')}"></div></div>`;
             });
             w.document.body.innerHTML = html;
             w.focus();
