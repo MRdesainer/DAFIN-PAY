@@ -1161,6 +1161,7 @@
             <div id="scannerResult" class="text-center text-sm text-stone-500 mb-3">Arahkan kamera ke barcode santri</div>
             <div id="hasilScanPanel" class="hidden mb-3 rounded-xl border-2 border-green-500 bg-green-50 p-3">
                 <div class="flex items-center gap-3">
+                    <img id="hasilScanFoto" src="" alt="Foto santri" class="w-12 h-12 rounded-full object-cover border-2 border-secondary/60 shrink-0 hidden">
                     <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold shrink-0" id="hasilScanAvatar">S</div>
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-sm text-stone-800 truncate" id="hasilScanNama">-</p>
@@ -3865,6 +3866,8 @@
             if (token) santri = santriList.find(s => String(s.nis) === token);
         }
         const panel = document.getElementById('hasilScanPanel');
+        const fotoEl = document.getElementById('hasilScanFoto');
+        const avatarEl = document.getElementById('hasilScanAvatar');
         if (santri) {
             document.getElementById('hasilScanNama').textContent = santri.nama;
             document.getElementById('hasilScanNis').textContent = 'NIS: ' + santri.nis;
@@ -3872,7 +3875,16 @@
             const saldoEl = document.getElementById('hasilScanSaldo');
             saldoEl.textContent = 'Saldo: ' + formatRp(santri.saldo);
             saldoEl.className = 'text-xs font-bold ' + (santri.saldo > 0 ? 'text-green-600' : 'text-stone-400');
-            document.getElementById('hasilScanAvatar').textContent = (santri.nama || 'S').charAt(0).toUpperCase();
+            if (santri.foto) {
+                fotoEl.src = santri.foto;
+                fotoEl.classList.remove('hidden');
+                avatarEl.classList.add('hidden');
+            } else {
+                fotoEl.removeAttribute('src');
+                fotoEl.classList.add('hidden');
+                avatarEl.classList.remove('hidden');
+                avatarEl.textContent = (santri.nama || 'S').charAt(0).toUpperCase();
+            }
             panel.classList.remove('hidden');
             document.getElementById('scannerResult').textContent = '';
             window.__scanSantri = santri;
