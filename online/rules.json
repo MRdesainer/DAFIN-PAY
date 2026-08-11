@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "barokah": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}
