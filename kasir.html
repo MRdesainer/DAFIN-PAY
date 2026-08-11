@@ -3259,27 +3259,47 @@
         ctx.font = '12px "Segoe UI", sans-serif';
         ctx.fillText('Tunjukkan QR ini ke kasir di koperasi', qx + qsize / 2, qy + qsize + 44);
 
-        // Kolom kanan: pemilik kartu + QR aplikasi wali (kecil)
+        // Kolom kanan: data lengkap santri + QR aplikasi wali (kecil)
         const rx = 390;
         ctx.textAlign = 'left';
         ctx.fillStyle = '#8A7A5C';
-        ctx.font = '14px "Segoe UI", sans-serif';
-        ctx.fillText('PEMILIK KARTU', rx, 340);
-        ctx.fillStyle = '#06392A';
-        ctx.font = 'bold 24px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, s.nama, 560), rx, 372);
-        ctx.fillStyle = '#3F3A2E';
-        ctx.font = '15px "Segoe UI", sans-serif';
-        ctx.fillText(potongTeks(ctx, 'NIS: ' + s.nis + '  |  Kelas: ' + (s.kelas || '-'), 560), rx, 398);
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(rx, 420);
-        ctx.lineTo(W - 50, 420);
-        ctx.stroke();
+        ctx.font = 'bold 16px "Segoe UI", sans-serif';
+        ctx.fillText('DATA SANTRI', rx, 340);
+
+        const jkTeks = s.jk === 'P' ? 'Perempuan' : (s.jk === 'L' ? 'Laki-laki' : '-');
+        const saldoFormatted = formatRp(s.saldo || 0);
+        const barisBelakang = [
+            ['Nama', s.nama, 19],
+            ['NIS', String(s.nis), 18],
+            ['Tempat, Tanggal Lahir', s.ttl || '-', 16],
+            ['Jenis Kelamin', jkTeks, 18],
+            ['Kamar / Kelas', s.kelas || '-', 18],
+            ['Wali / Orang Tua', s.orangTua || '-', 16],
+            ['Tahun Masuk', s.tahunMasuk || '-', 18],
+            ['Saldo Tabungan', saldoFormatted, 17]
+        ];
+        let by = 200;
+        barisBelakang.forEach(([lbl, val, fs], i) => {
+            ctx.fillStyle = '#8A7A5C';
+            ctx.font = '12px "Segoe UI", sans-serif';
+            ctx.fillText(lbl.toUpperCase(), rx, by);
+            ctx.fillStyle = '#06392A';
+            ctx.font = 'bold ' + fs + 'px "Segoe UI", sans-serif';
+            ctx.fillText(potongTeks(ctx, String(val), 560), rx, by + 17);
+            ctx.strokeStyle = '#E7D8B6';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(rx, by + 26);
+            ctx.lineTo(W - 50, by + 26);
+            ctx.stroke();
+            by += 28;
+        });
+
+        // Update y posisi untuk QR wali agar tidak tumpuk tabel data
+        const dataEndY = 200 + barisBelakang.length * 28 - 2;
 
         const linkWali = (identitas.linkWali || '').trim() || 'https://MRdesainer.github.io/DAFIN-PAY/wali.html';
-        const wsize = 140, wx = 790, wy = 445;
+        const wsize = 140, wx = 790, wy = Math.max(dataEndY + 20, 445);
         ctx.fillStyle = '#FFFFFF';
         rrPath(ctx, wx - 7, wy - 7, wsize + 14, wsize + 14, 12);
         ctx.fill();
@@ -3309,6 +3329,19 @@
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '10px "Segoe UI", sans-serif';
         ctx.fillText('scan untuk pantau saldo ananda', wx + wsize / 2, wy + wsize + 34);
+
+        // Kaki kartu
+        ctx.strokeStyle = '#E7D8B6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(40, 570);
+        ctx.lineTo(W - 50, 570);
+        ctx.stroke();
+        gambarBadgeFounder(ctx, 320, 550);
+        ctx.fillStyle = '#8A7A5C';
+        ctx.font = '13px "Segoe UI", sans-serif';
+        const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
+        ctx.fillText(alamat || identitas.namaApp, 320, 578);
 
         ctx.textAlign = 'left';
 
@@ -3395,23 +3428,48 @@
         }
         santriList.forEach(s => {
             const card = document.createElement('div');
-            card.className = 'bg-white rounded-xl shadow-islami overflow-hidden text-center';
+            card.className = 'bg-white rounded-xl shadow-islami overflow-hidden';
+            const jkTeks = s.jk === 'P' ? 'Perempuan' : 'Laki-laki';
+            const saldoFormatted = formatRp(s.saldo || 0);
+            const avatar = s.nama.charAt(0).toUpperCase();
             card.innerHTML = `
                 <div class="bg-gradient-to-r from-primary to-gelap px-3 py-1.5 flex justify-between items-center">
                     <span class="text-[10px] text-secondary font-bold tracking-wide">${identitas.namaApp.toUpperCase()}</span>
                     <span class="text-[10px] text-white/70 font-medium">KARTU SANTRI</span>
                 </div>
-                <div class="p-4">
-                    <div class="bg-pasir/70 rounded-lg p-3 mb-3 flex justify-center items-center" style="min-height:110px;">
-                        <div class="qr-${s.id}"></div>
+                <div class="p-3">
+                    <div class="flex items-start gap-3">
+                        <div class="flex flex-col items-center flex-shrink-0">
+                            <div class="bg-pasir/70 rounded-lg p-1.5 mb-1" style="min-width:90px; min-height:90px;">
+                                <div class="qr-${s.id}"></div>
+                            </div>
+                            <span class="text-[9px] text-stone-500">SCAN UNTUK BELANJA</span>
+                        </div>
+                        <div class="flex flex-col items-center flex-shrink-0 w-16">
+                            ${s.foto
+                                ? `<img src="${s.foto}" alt="Foto ${s.nama}" class="w-12 h-14 rounded-lg object-cover ring-2 ring-secondary/60 shadow">`
+                                : `<div class="w-12 h-14 rounded-lg bg-islami text-white flex items-center justify-center text-lg font-bold ring-2 ring-secondary/60 shadow flex-shrink-0">${avatar}</div>`}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-sm text-primary mb-0.5 leading-tight">${s.nama}</h4>
+                            <div class="grid grid-cols-[auto_1fr] gap-y-0.5 text-xs text-stone-600">
+                                <span class="font-medium text-stone-400">NIS:</span>
+                                <span class="truncate">${s.nis}</span>
+                                <span class="font-medium text-stone-400">TTL:</span>
+                                <span class="truncate">${s.ttl || '-'}</span>
+                                <span class="font-medium text-stone-400">JK:</span>
+                                <span class="truncate">${jkTeks}</span>
+                                <span class="font-medium text-stone-400">Kamar/Kelas:</span>
+                                <span class="truncate">${s.kelas || '-'}</span>
+                                <span class="font-medium text-stone-400">Wali:</span>
+                                <span class="truncate">${s.orangTua || '-'}</span>
+                                <span class="font-medium text-stone-400">Masuk:</span>
+                                <span class="truncate">${s.tahunMasuk || '-'}</span>
+                                <span class="font-medium text-stone-400">Saldo:</span>
+                                <span class="text-secondary font-semibold">${saldoFormatted}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-center gap-2 mb-1">
-                        ${s.foto
-                            ? `<img src="${s.foto}" alt="Foto ${s.nama}" class="w-8 h-8 rounded-full object-cover ring-2 ring-secondary/60">`
-                            : `<div class="w-8 h-8 rounded-full bg-islami text-white flex items-center justify-center text-sm font-bold ring-2 ring-secondary/60">${s.nama.charAt(0)}</div>`}
-                        <h4 class="font-bold text-sm">${s.nama}</h4>
-                    </div>
-                    <p class="text-xs text-stone-500">NIS: ${s.nis} | ${s.kelas}</p>
                     <div class="flex gap-2 mt-3">
                         <button class="cetakBarcode flex-1 bg-primary text-white py-1.5 rounded text-xs hover:opacity-90" data-id="${s.id}">
                             <i class="fas fa-print mr-1"></i> Cetak Kartu
@@ -3429,8 +3487,8 @@
                     el.innerHTML = '';
                     new QRCode(el, {
                         text: s.nis,
-                        width: 100,
-                        height: 100,
+                        width: 90,
+                        height: 90,
                         colorDark: '#06392A',
                         colorLight: '#ffffff',
                         correctLevel: QRCode.CorrectLevel.M
