@@ -3285,7 +3285,7 @@
             ctx.fillText(lbl.toUpperCase(), rx, by);
             ctx.fillStyle = '#06392A';
             ctx.font = 'bold ' + fs + 'px "Segoe UI", sans-serif';
-            ctx.fillText(potongTeks(ctx, String(val), 560), rx, by + 17);
+            ctx.fillText(potongTeks(ctx, String(val), 360), rx, by + 17);
             ctx.strokeStyle = '#E7D8B6';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -3329,19 +3329,6 @@
         ctx.fillStyle = '#8A7A5C';
         ctx.font = '10px "Segoe UI", sans-serif';
         ctx.fillText('scan untuk pantau saldo ananda', wx + wsize / 2, wy + wsize + 34);
-
-        // Kaki kartu
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(40, 570);
-        ctx.lineTo(W - 50, 570);
-        ctx.stroke();
-        gambarBadgeFounder(ctx, 320, 550);
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '13px "Segoe UI", sans-serif';
-        const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(alamat || identitas.namaApp, 320, 578);
 
         ctx.textAlign = 'left';
 
@@ -4725,8 +4712,6 @@
 
     // Daftarkan service worker (agar bisa dipasang sebagai aplikasi Android/PWA)
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
-
-    pasangWatermark();
     </script>
 </body>
 </html>

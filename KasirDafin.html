@@ -2530,8 +2530,6 @@
         ctx.font = 'bold 15px "Segoe UI", sans-serif';
         ctx.fillText('SCAN UNTUK BELANJA', 320, qy + qsize + 16);
 
-        gambarBadgeFounder(ctx, 320, 376);
-
         ctx.textAlign = 'left';
 
         return cv;
@@ -2631,18 +2629,6 @@
         ctx.font = '11px "Segoe UI", sans-serif';
         ctx.fillText('Scan QR untuk memantau saldo ananda', qx + qsize / 2, qy + qsize + 45);
 
-        // Kaki kartu
-        ctx.strokeStyle = '#E7D8B6';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(40, 372);
-        ctx.lineTo(600, 372);
-        ctx.stroke();
-        gambarBadgeFounder(ctx, 320, 348);
-        ctx.fillStyle = '#8A7A5C';
-        ctx.font = '13px "Segoe UI", sans-serif';
-        const alamat = [identitas.alamat, identitas.kota].filter(Boolean).join(' | ');
-        ctx.fillText(alamat || identitas.namaApp, 320, 392);
         ctx.textAlign = 'left';
 
         return cv;
@@ -3815,8 +3801,6 @@
     document.getElementById('tutupModalLisensi').addEventListener('click', tutupModalLisensi);
     document.getElementById('inputKunciLisensi').addEventListener('keydown', e => { if (e.key === 'Enter') simpanKunciLisensi(); });
     muhasabahLisensi();
-
-    pasangWatermark();
     </script>
 </body>
 </html>
